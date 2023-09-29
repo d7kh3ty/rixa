@@ -198,6 +198,9 @@
   <ItemGroup>
     <ClInclude Include="..\Play.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="D:\Desktop\Mech 1\Step 1\East 64 x 64.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

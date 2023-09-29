@@ -105,7 +105,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	Play::CentreAllSpriteOrigins();
 
 	//game objects created
-	Play::CreateGameObject(angel7, { 641,600 }, 100, "angel7");
+	Play::CreateGameObject(angel7, { 641,600 }, 641, "angel");
 
 	//does file exist, read file
 	//std::ifstream afile = std::ifstream("config.txt");
@@ -127,7 +127,7 @@ bool MainGameUpdate( float elapsedTime )
 	GameObject& player = Play::GetGameObjectByType(angel7);
 
 	//set the players sprite
-	Play::SetSprite(player, "angel7",0.1f);
+	Play::SetSprite(player, "angel",0);
 
 	//make sure it's up to date
 	Play::UpdateGameObject(player);
