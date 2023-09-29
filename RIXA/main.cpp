@@ -23,14 +23,14 @@ GameState gameState;
 enum GameObjectType
 {
 	TYPE_NULL = -1,
-	angel7,
+	angel,
 	projectile,
 	enemy
 };
 
 void HandlePlayerControls()
 {
-	GameObject& player = Play::GetGameObjectByType( angel7 );
+	GameObject& player = Play::GetGameObjectByType( angel );
 
 	player.velocity = { 0, 0 };
 	if( Play::KeyDown( 0x57 ) ) // W
@@ -105,7 +105,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	Play::CentreAllSpriteOrigins();
 
 	//game objects created
-	Play::CreateGameObject(angel7, { 641,600 }, 100, "angel7");
+	Play::CreateGameObject(angel, { 641,600 }, 100, "angel");
 
 	//does file exist, read file
 	//std::ifstream afile = std::ifstream("config.txt");
@@ -124,10 +124,10 @@ bool MainGameUpdate( float elapsedTime )
 	Play::ClearDrawingBuffer(c);
 	
 	//find game object by type
-	GameObject& player = Play::GetGameObjectByType(angel7);
+	GameObject& player = Play::GetGameObjectByType(angel);
 
 	//set the players sprite
-	Play::SetSprite(player, "angel7",0.1f);
+	Play::SetSprite(player, "angel",0.1f);
 
 	//make sure it's up to date
 	Play::UpdateGameObject(player);
