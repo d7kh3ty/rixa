@@ -200,6 +200,16 @@
     <ClInclude Include="..\Play.h" />
     <ClInclude Include="Camera.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="D:\Desktop\Mech 1\angelwalke_3.png" />
+    <Image Include="D:\Desktop\Mech 1\angelwalkn_3.png" />
+    <Image Include="D:\Desktop\Mech 1\angelwalkne_3.png" />
+    <Image Include="D:\Desktop\Mech 1\angelwalknw_3.png" />
+    <Image Include="D:\Desktop\Mech 1\angelwalks_3.png" />
+    <Image Include="D:\Desktop\Mech 1\angelwalkse_3.png" />
+    <Image Include="D:\Desktop\Mech 1\angelwalksw_3.png" />
+    <Image Include="D:\Desktop\Mech 1\angelwalkw_3.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
