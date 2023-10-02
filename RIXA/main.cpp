@@ -4,7 +4,7 @@
 #include "Camera.h"
 
 int DISPLAY_WIDTH = 1280;
-int DISPLAY_HEIGHT = 720;
+int DISPLAY_HEIGHT = 800;
 int DISPLAY_SCALE = 1;
 
 //what is the state of the game
@@ -31,10 +31,16 @@ enum GameObjectType
 void HandlePlayerControls();
 void UpdateGameObjects();
 void DrawOffset(GameObject* go);
+void DrawBackground();
 
 GameState gameState;
+
 std::string message = "";
+
 Camera camera(0,0,DISPLAY_WIDTH, DISPLAY_HEIGHT);
+
+float wBound;
+float hBound;
 
 void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 {
@@ -50,6 +56,8 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	Play::CreateGameObject(angel, { DISPLAY_WIDTH/2,DISPLAY_HEIGHT/2 }, 100, "angel");
 	Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
 
+	wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
+	hBound = 7 / 4 * Play::GetSpriteHeight("MarsBG");
 	//Play::LoadBackground("Data\\Sprites\\MarsBG2.png");
 	//does file exist, read file
 	//std::ifstream afile = std::ifstream("config.txt");
@@ -133,8 +141,8 @@ void HandlePlayerControls()
 
 		// Find x and y of mouse relative to position
 		Point2D mousePos = Play::GetMousePos();
-		int x = floor((mousePos.x - player.pos.x));
-		int y = floor((mousePos.y - player.pos.y));
+		int x = floor(((mousePos.x + camera.GetXOffset()) - player.pos.x));
+		int y = floor(((mousePos.y + camera.GetYOffset()) - player.pos.y));
 		std::cout << x << std::endl;
 		std::cout << y << std::endl;
 
@@ -152,22 +160,36 @@ void HandlePlayerControls()
 	//	|| (player.velocity.x < 0 && player.pos.x < 0))
 	//	player.velocity.x = 0;
 
+	// Bounding player
+	//if (player.pos.x > )
+
 	player.pos = Point2D(floor(player.pos.x), floor(player.pos.y));
 }
 
 void UpdateGameObjects()
 {
-	// Camera must state all the offsets required to draw each sprite
-	// Fixed offset
-		// playeroff = player.pos - offset pos
-	// if is not
 	GameObject& player = Play::GetGameObjectByType(angel);
 
-	camera.Follow(player.pos.x, player.pos.y);
+	// Camera bounding for level
+	if(player.pos.x > 3/2 * wBound) // R Bound
+	{
+		camera.Follow(wBound, player.pos.y);
+	}
+	else if(player.pos.x < - 3 / 2 * wBound) // L Bound
+	{
+		camera.Follow(-wBound, player.pos.y);
+	}
+	else if(player.pos.y > hBound) // Top of the level bound
+	{
+		camera.Follow(player.pos.x, hBound);
+	}
+	else // Otherwise
+	{
+		camera.Follow(player.pos.x, player.pos.y);
+	}
 
 	// BACKGROUND MUST BE UPDATED FIRST
-	GameObject& bg = Play::GetGameObjectByType(background);
-	DrawOffset(&bg);
+	DrawBackground();
 
 	// Update projectiles
 	std::vector<int> pv = Play::CollectGameObjectIDsByType(projectile);
@@ -178,11 +200,6 @@ void UpdateGameObjects()
 		DrawOffset(&p);
 	}
 
-	//Update player
-	//DrawOffset(&player);
-	//GameObject& player = Play::GetGameObjectByType(angel);
-	//Play::UpdateGameObject(player);
-	//Play::DrawObject(player);
 	DrawOffset(&player);
 
 }
@@ -199,4 +216,14 @@ void DrawOffset(GameObject* go)
 	go->pos = { oldPosx,oldPosy };
 	Play::UpdateGameObject(*go);
 
+}
+
+void DrawBackground()
+{
+	Play::DrawSprite("MarsBG", { -camera.GetXOffset(),0 - camera.GetYOffset() }, 0);
+	Play::DrawSprite("MarsBG", { 3 / 2 * Play::GetSpriteWidth("MarsBG") - camera.GetXOffset(),0 - camera.GetYOffset() }, 0);
+	Play::DrawSprite("MarsBG", { -3 / 2 * Play::GetSpriteWidth("MarsBG") - camera.GetXOffset(),0 - camera.GetYOffset() }, 0);
+	Play::DrawSprite("MarsBG", { 0 - camera.GetXOffset(),-3 / 2 * Play::GetSpriteHeight("MarsBG") - camera.GetYOffset() }, 0);
+	Play::DrawSprite("MarsBG", { 3 / 2 * Play::GetSpriteWidth("MarsBG") - camera.GetXOffset(),-3 / 2 * Play::GetSpriteHeight("MarsBG") - camera.GetYOffset() }, 0);
+	Play::DrawSprite("MarsBG", { -3 / 2 * Play::GetSpriteWidth("MarsBG") - camera.GetXOffset(),-3 / 2 * Play::GetSpriteHeight("MarsBG") - camera.GetYOffset() }, 0);
 }
