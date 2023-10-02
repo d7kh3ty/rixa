@@ -32,6 +32,7 @@ void HandlePlayerControls();
 void UpdateGameObjects();
 void DrawOffset(GameObject* go);
 void DrawBackground();
+bool OutOfBounds(GameObject* go);
 
 GameState gameState;
 
@@ -133,11 +134,12 @@ void HandlePlayerControls()
 	}
 
 	// FIRE WEAPON
-	if (Play::KeyPressed(0x45)) // E
+	if (Play::KeyPressed(VK_LBUTTON)) // Mouse Button
 	{
-		int p = Play::CreateGameObject(projectile, player.pos, 30, "star");
+		int p = Play::CreateGameObject(projectile, player.pos, 30, "bullet");
 		//Play::GetGameObject(p).velocity = Vector2D( 10, 10 );
 		GameObject& nya = Play::GetGameObject(p);
+		nya.animSpeed = 0.1f;
 
 		// Find x and y of mouse relative to position
 		Point2D mousePos = Play::GetMousePos();
@@ -179,9 +181,9 @@ void UpdateGameObjects()
 	{
 		camera.Follow(-wBound, player.pos.y);
 	}
-	else if(player.pos.y > hBound) // Top of the level bound
+	else if(player.pos.y < - hBound) // Top of the level bound
 	{
-		camera.Follow(player.pos.x, hBound);
+		camera.Follow(player.pos.x, - hBound);
 	}
 	else // Otherwise
 	{
@@ -197,6 +199,14 @@ void UpdateGameObjects()
 	for (int id : pv)
 	{
 		GameObject& p = Play::GetGameObject(id);
+
+		// Destroy out of bounds bullets
+		if(OutOfBounds(&p))
+		{
+			Play::DestroyGameObject(id);
+			continue;
+		}
+
 		DrawOffset(&p);
 	}
 
@@ -226,4 +236,9 @@ void DrawBackground()
 	Play::DrawSprite("MarsBG", { 0 - camera.GetXOffset(),-3 / 2 * Play::GetSpriteHeight("MarsBG") - camera.GetYOffset() }, 0);
 	Play::DrawSprite("MarsBG", { 3 / 2 * Play::GetSpriteWidth("MarsBG") - camera.GetXOffset(),-3 / 2 * Play::GetSpriteHeight("MarsBG") - camera.GetYOffset() }, 0);
 	Play::DrawSprite("MarsBG", { -3 / 2 * Play::GetSpriteWidth("MarsBG") - camera.GetXOffset(),-3 / 2 * Play::GetSpriteHeight("MarsBG") - camera.GetYOffset() }, 0);
+}
+
+bool OutOfBounds(GameObject* go)
+{
+	return abs(go->pos.x) > wBound + 1000 || abs(go->pos.y) > hBound + 1000;
 }
