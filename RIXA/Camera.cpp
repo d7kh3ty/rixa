@@ -27,5 +27,11 @@ void Camera::Move(float x, float y)
 void Camera::Follow(float x, float y)
 {
 	xOffset_ = x - width_ / 2;
-	yOffset_ = y - height_ / 2;
+
+	if(y - height_ / 2 < yOffset_)
+	{
+		yOffset_ = y - height_ / 2;
+	}
+	//std::cout << "xOff: " << xOffset_ << "\n";
+	//std::cout << "yOff: " << yOffset_ << "\n";
 }
