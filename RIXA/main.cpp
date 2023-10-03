@@ -96,9 +96,28 @@ bool MainGameUpdate( float elapsedTime )
 	// Delta time
 	gameState.timer += elapsedTime;
 
-	HandlePlayerControls();
-	level.display(-camera.GetXOffset(), -camera.GetYOffset());
-	UpdateGameObjects();
+	// Placeholders of menu and such
+	if (state == menu)
+	{
+		//Play::DrawFontText("132px", "RIXA",
+		//	{ DISPLAY_WIDTH / 2, 100 }, Play::CENTRE);
+		Play::DrawSprite("MarsBG", { 0,0 }, 0);
+		Play::DrawSprite("title", { DISPLAY_WIDTH / 2, 100 }, 0);
+
+		Play::DrawFontText("64px", "PRESS SPACE TO START",
+			{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 300 }, Play::CENTRE);
+
+		if(Play::KeyPressed(VK_SPACE))
+		{
+			state = play;
+		}
+	}
+	else if (state == play)
+	{
+		HandlePlayerControls();
+		level.display(-camera.GetXOffset(), -camera.GetYOffset());
+		UpdateGameObjects();
+	}
 
 	//draw everything
 	Play::PresentDrawingBuffer();
