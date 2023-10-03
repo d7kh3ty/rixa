@@ -185,6 +185,14 @@ void UpdateGameObjects()
 	{
 		camera.Follow(player.pos.x, - hBound);
 	}
+	else if(player.pos.x < -3 / 2 * wBound && player.pos.y < -hBound)
+	{
+		camera.Follow(-wBound, -hBound);
+	}
+	else if (player.pos.x < 3 / 2 * wBound && player.pos.y < -hBound)
+	{
+		camera.Follow(wBound, -hBound);
+	}
 	else // Otherwise
 	{
 		camera.Follow(player.pos.x, player.pos.y);
