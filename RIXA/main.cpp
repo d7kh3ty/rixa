@@ -50,7 +50,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 
 	// Set default game objects
 	Play::CreateGameObject(angel, { DISPLAY_WIDTH/2,DISPLAY_HEIGHT/2 }, 100, "angel");
-	Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
+	//Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
 
 	level = Level::Level("Data\\Levels\\", "island", "Data\\Levels\\test_map.xml");
 
@@ -173,7 +173,7 @@ void UpdateGameObjects()
 
 	// BACKGROUND MUST BE UPDATED FIRST
 	GameObject& bg = Play::GetGameObjectByType(background);
-	DrawOffset(&bg);
+	//DrawOffset(&bg);
 
 	// Update projectiles
 	std::vector<int> pv = Play::CollectGameObjectIDsByType(projectile);
