@@ -19,6 +19,16 @@ struct GameState
 	float angle; // Angle is the speed of bidirectional movement
 };
 
+enum GameStateType
+{
+	menu,
+	cutscene,
+	play,
+	pause,
+	gameWin,
+	gameLose,
+};
+
 //what are the types of game objects
 enum GameObjectType
 {
@@ -30,14 +40,17 @@ enum GameObjectType
 };
 
 void HandlePlayerControls();
+void UpdateCamera();
+void UpdateProjectiles();
 void UpdateGameObjects();
+
 void DrawOffset(GameObject* go);
 void DrawBackground();
 bool OutOfBounds(GameObject* go);
 
 GameState gameState;
 
-std::string message = "";
+GameStateType state;
 
 Camera camera(0,0,DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
@@ -49,9 +62,6 @@ Level level;
 void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 {
 
-	//approximate directional movement
-	gameState.angle = gameState.speed * 0.7;
-	
 	//must be done before creating game objects	
 	Play::CreateManager( DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_SCALE );
 	Play::CentreAllSpriteOrigins();
@@ -65,6 +75,13 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 
 	wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
 	hBound = 7 / 4 * Play::GetSpriteHeight("MarsBG");
+
+	// Set state
+	state = menu;
+
+	//approximate directional movement
+	gameState.angle = gameState.speed * 0.7;
+
 	//Play::LoadBackground("Data\\Sprites\\MarsBG2.png");
 	//does file exist, read file
 	//std::ifstream afile = std::ifstream("config.txt");
@@ -177,22 +194,58 @@ void HandlePlayerControls()
 
 void UpdateGameObjects()
 {
+	UpdateCamera();
+
+	// BACKGROUND MUST BE UPDATED FIRST
+	//DrawBackground();
+
+	// Update projectiles
+	UpdateProjectiles();
+
+	GameObject& player = Play::GetGameObjectByType(angel);
+	DrawOffset(&player);
+
+}
+
+void UpdateProjectiles()
+{
+	std::vector<int> pv = Play::CollectGameObjectIDsByType(projectile);
+
+	for (int id : pv)
+	{
+		GameObject& p = Play::GetGameObject(id);
+
+		// Destroy out of bounds bullets
+		if (OutOfBounds(&p))
+		{
+			Play::DestroyGameObject(id);
+			continue;
+		}
+
+		DrawOffset(&p);
+	}
+
+}
+
+
+void UpdateCamera()
+{
 	GameObject& player = Play::GetGameObjectByType(angel);
 
 	// Camera bounding for level
-	if(player.pos.x > 3/2 * wBound) // R Bound
+	if (player.pos.x > 3 / 2 * wBound) // R Bound
 	{
 		camera.Follow(wBound, player.pos.y);
 	}
-	else if(player.pos.x < - 3 / 2 * wBound) // L Bound
+	else if (player.pos.x < -3 / 2 * wBound) // L Bound
 	{
 		camera.Follow(-wBound, player.pos.y);
 	}
-	else if(player.pos.y < - hBound) // Top of the level bound
+	else if (player.pos.y < -hBound) // Top of the level bound
 	{
-		camera.Follow(player.pos.x, - hBound);
+		camera.Follow(player.pos.x, -hBound);
 	}
-	else if(player.pos.x < -3 / 2 * wBound && player.pos.y < -hBound)
+	else if (player.pos.x < -3 / 2 * wBound && player.pos.y < -hBound)
 	{
 		camera.Follow(-wBound, -hBound);
 	}
@@ -204,29 +257,6 @@ void UpdateGameObjects()
 	{
 		camera.Follow(player.pos.x, player.pos.y);
 	}
-
-	// BACKGROUND MUST BE UPDATED FIRST
-	//DrawBackground();
-
-	// Update projectiles
-	std::vector<int> pv = Play::CollectGameObjectIDsByType(projectile);
-
-	for (int id : pv)
-	{
-		GameObject& p = Play::GetGameObject(id);
-
-		// Destroy out of bounds bullets
-		if(OutOfBounds(&p))
-		{
-			Play::DestroyGameObject(id);
-			continue;
-		}
-
-		DrawOffset(&p);
-	}
-
-	DrawOffset(&player);
-
 }
 
 
