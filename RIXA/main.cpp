@@ -97,36 +97,47 @@ void HandlePlayerControls()
 {
 	GameObject& player = Play::GetGameObjectByType(angel);
 
+	{
+		Play::SetSprite(player, "angelwalknorth", 0.00f);
+		player.velocity = { 0,0 }; //no speed
+		player.acceleration = { 0,0 }; //no acceleration
+	}
+
 	if (Play::KeyDown(0x57)) // W 
 	{
-		Play::SetSprite(player, "angelwalkn", 0.07f);
+		Play::SetSprite(player, "angelwalknorth", 0.07f);
 		player.velocity = { 0, -gameState.speed };
-		if (Play::KeyDown(0x41)) // A
+		if (Play::KeyDown(0x41)) { // A
 			Play::SetSprite(player, "angelwalknw", 0.07f);
 			player.velocity = { -gameState.angle, -gameState.angle };
-		if (Play::KeyDown(0x44)) // D
+		}
+		if (Play::KeyDown(0x44)) {// D
 			Play::SetSprite(player, "angelwalkne", 0.07f);
 			player.velocity = { gameState.angle, -gameState.angle };
+		}
 	}
 
 	else if (Play::KeyDown(0x53)) // S
 	{
 		Play::SetSprite(player, "angelwalks", 0.07f);
 		player.velocity = { 0, gameState.speed };
-		if (Play::KeyDown(0x41)) // A
+		if (Play::KeyDown(0x41)) {// A
 			Play::SetSprite(player, "angelwalksw", 0.07f);
 			player.velocity = { -gameState.angle, gameState.angle };
-		if (Play::KeyDown(0x44)) // D
+		}
+		if (Play::KeyDown(0x44)) {// D
 			Play::SetSprite(player, "angelwalkse", 0.07f);
 			player.velocity = { gameState.angle, gameState.angle };
+		}
 	}
 
 	else if (Play::KeyDown(0x41)) // A
 	{
 		Play::SetSprite(player, "angelwalkw", 0.07f);
 		player.velocity = { -gameState.speed, 0 };
-		if (Play::KeyDown(0x57)) // W
+		if (Play::KeyDown(0x57)) { // W
 			player.velocity = { -gameState.angle, -gameState.angle };
+		}
 		if (Play::KeyDown(0x53)) // S
 			player.velocity = { -gameState.angle, gameState.angle };
 	}
@@ -135,18 +146,14 @@ void HandlePlayerControls()
 		
 		Play::SetSprite(player, "angelwalke", 0.07f);
 		player.velocity = { gameState.speed, 0 };
-		if (Play::KeyDown(0x57)) // W
+		if (Play::KeyDown(0x57)) { // W
 			player.velocity = { gameState.angle, -gameState.angle };
-		if (Play::KeyDown(0x53)) // S
+		}
+		if (Play::KeyDown(0x53)) { // S
 			player.velocity = { gameState.angle, gameState.angle };
+		}
 	}
-	else
-	{
-		Play::SetSprite(player, "angelwalkn", 0.00f);
-		player.velocity = { 0,0 }; //no speed
-		player.acceleration = { 0,0 }; //no acceleration
-	}
-
+	
 	//Play::UpdateGameObject(player);
 
 
