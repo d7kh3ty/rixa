@@ -73,11 +73,11 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 
 	//Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
 
-	wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
-	hBound = 7 / 4 * Play::GetSpriteHeight("MarsBG");
+	//wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
+	//hBound = 7 / 4 * Play::GetSpriteHeight("MarsBG");
 
-	// Set state
-	state = menu;
+	wBound = level.getWidth();
+	hBound = level.getHeight();
 
 	//approximate directional movement
 	gameState.angle = gameState.speed * 0.7;

@@ -15,15 +15,18 @@ public:
 	Level();
 	Level(string path, string tileset_s, string level);
 	void display(float x, float y);
-
-	// required to sync frames with file format
-	int frame = 71;
+	int getWidth();
+	int getHeight();
 
 private:
 	int tileset;
 	vector<Chunk> chunks;
+	int width;
+	int height;
 	// number of pixels for each tile
 	int px = 24;
 	int py = 24;
+	// required to sync frames with file format
+	int frame = 71;
 };
 
