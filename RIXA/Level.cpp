@@ -26,6 +26,15 @@ Level::Level(string path, string tileset_s, string level) {
 
 	// get tileset file
 
+	size_t layer = levels.find("layer");
+	levels.erase(0, layer+5);
+
+	levels.erase(0, levels.find("width=\"") + 7);
+	width = stoi(levels.substr(0, levels.find("\""))) * px;
+	levels.erase(0, levels.find("height=\"") + 8);
+	std::cout << "levels";
+	height = stoi(levels.substr(0, levels.find("\""))) * px;
+
 	bool stop = false;
 	// get chunks
 	while (!stop)
@@ -97,4 +106,12 @@ void Level::display(float x, float y) {
 			}
 		}
 	}
+}
+
+int Level::getWidth() {
+	return width;
+}
+
+int Level::getHeight() {
+	return height;
 }
