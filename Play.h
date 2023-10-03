@@ -1173,7 +1173,7 @@ public:
 
 	// Loads a sprite sheet and creates a sprite from it (custom asset pipelines)
 	// > All sprites are normally created by the PlayGraphics constructor
-	int LoadSpriteSheet( const std::string& path, const std::string& filename );
+	int LoadSpriteSheet( const std::string& path, const std::string& filename, int height = 1, int width = 1);
 	// Adds a sprite sheet dynamically from memory (custom asset pipelines)
 	// > All sprites are normally created by the PlayGraphics constructor
 	int AddSprite( const std::string& name, PixelData& pixelData, int hCount = 1, int vCount = 1 );
@@ -2894,12 +2894,12 @@ void PlayGraphics::Destroy()
 // Loading functions
 //********************************************************************************************************************************
 
-int PlayGraphics::LoadSpriteSheet( const std::string& path, const std::string& filename )
+int PlayGraphics::LoadSpriteSheet( const std::string& path, const std::string& filename, int height, int width )
 {
 	PixelData canvasBuffer;
 	std::string spriteName = filename;
-	int hCount = 1;
-	int vCount = 1;
+	int hCount = height;
+	int vCount = width;
 
 	// Switch everything to uppercase to avoid need to check case each time
 	for( char& c : spriteName ) c = static_cast<char>( toupper( c ) );

@@ -2,6 +2,7 @@
 #define PLAY_USING_GAMEOBJECT_MANAGER
 #include "Play.h"
 #include "Camera.h"
+#include "Level.h"
 
 int DISPLAY_WIDTH = 1280;
 int DISPLAY_HEIGHT = 720;
@@ -35,6 +36,7 @@ void DrawOffset(GameObject* go);
 GameState gameState;
 std::string message = "";
 Camera camera(0,0,DISPLAY_WIDTH, DISPLAY_HEIGHT);
+Level level;
 
 void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 {
@@ -50,6 +52,8 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	Play::CreateGameObject(angel, { DISPLAY_WIDTH/2,DISPLAY_HEIGHT/2 }, 100, "angel");
 	Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
 
+	level = Level::Level("Data\\Levels\\", "island", "Data\\Levels\\test_map.xml");
+
 	//Play::LoadBackground("Data\\Sprites\\MarsBG2.png");
 	//does file exist, read file
 	//std::ifstream afile = std::ifstream("config.txt");
@@ -63,6 +67,8 @@ bool MainGameUpdate( float elapsedTime )
 {
 	// Delta time
 	gameState.timer += elapsedTime;
+
+	level.display(-camera.GetXOffset(), -camera.GetYOffset());
 
 	HandlePlayerControls();
 	UpdateGameObjects();
