@@ -2,6 +2,7 @@
 #define PLAY_USING_GAMEOBJECT_MANAGER
 #include "Play.h"
 #include "Camera.h"
+#include "Level.h"
 
 int DISPLAY_WIDTH = 1280;
 int DISPLAY_HEIGHT = 800;
@@ -43,6 +44,8 @@ Camera camera(0,0,DISPLAY_WIDTH, DISPLAY_HEIGHT);
 float wBound;
 float hBound;
 
+Level level;
+
 void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 {
 
@@ -55,7 +58,10 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 
 	// Set default game objects
 	Play::CreateGameObject(angel, { DISPLAY_WIDTH/2,DISPLAY_HEIGHT/2 }, 100, "angel");
-	Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
+
+	level = Level::Level("Data\\Levels\\", "island", "Data\\Levels\\test_map.xml");
+
+	//Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
 
 	wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
 	hBound = 7 / 4 * Play::GetSpriteHeight("MarsBG");
@@ -74,6 +80,7 @@ bool MainGameUpdate( float elapsedTime )
 	gameState.timer += elapsedTime;
 
 	HandlePlayerControls();
+	level.display(-camera.GetXOffset(), -camera.GetYOffset());
 	UpdateGameObjects();
 
 	//draw everything
@@ -199,7 +206,7 @@ void UpdateGameObjects()
 	}
 
 	// BACKGROUND MUST BE UPDATED FIRST
-	DrawBackground();
+	//DrawBackground();
 
 	// Update projectiles
 	std::vector<int> pv = Play::CollectGameObjectIDsByType(projectile);
