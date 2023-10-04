@@ -91,16 +91,21 @@ public:
 	// Updating Movements
 	void Update() {
 
+		GameObject& player = Play::GetGameObject(playerid);
 		GameObject& enemy = Play::GetGameObject(id);
 		//Play::SetSprite(enemy, "coins_2", 0.25f); //
 
-		// Randomly shoot
+		// Shoot in direction of player
 		if (Play::RandomRoll(100) == 100) {
 			int pid = Play::CreateGameObject(e_projectile, { enemy.pos.x, enemy.pos.y }, 90, "bullet");
 			GameObject& bullet = Play::GetGameObject(pid);
-			bullet.velocity = Point2f(Play::RandomRollRange(-1, 1) * 4, 4);
-			bullet.rotSpeed = 1;
 			Play::PlayAudio("tool");
+			
+			int x = floor(((player.pos.x + camera.GetXOffset()) - enemy.pos.x));
+			int y = floor(((player.pos.y + camera.GetYOffset()) - enemy.pos.y));
+			int length = sqrt(x * x + y * y) / 5;
+			bullet.velocity = Vector2D(x / length, y / length);
+
 		}
 		DrawOffset(&enemy);
 
@@ -110,7 +115,6 @@ public:
 		}
 
 		// We can use the update projectiles to handle this
-		GameObject& player = Play::GetGameObject(playerid);
 		std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
 
 		for (int pid : projectiles) {
