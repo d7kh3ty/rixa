@@ -38,7 +38,6 @@ enum GameObjectType
 	e_projectile,
 	enemy,
 	background,
-	shadow,
 };
 
 enum EnemyType
@@ -172,7 +171,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	Play::CentreAllSpriteOrigins();
 
 	// Set default game objects
-	playerid =Play::CreateGameObject(angel, { DISPLAY_WIDTH/2,DISPLAY_HEIGHT/2 }, 100, "angel");
+	playerid = Play::CreateGameObject(angel, { DISPLAY_WIDTH/2+600,DISPLAY_HEIGHT/2+200 }, 100, "angel");
 
 	level = Level::Level("Data\\Levels\\", "island", "Data\\Levels\\test_map.xml");
 
@@ -201,6 +200,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	j_bidet = Enemy(TYPE_ENEMY1, { 600, 500 }, { -10,10 });
 
 	ursula_L = Enemy(TYPE_ENEMY1, { 500, 600 }, { 10,-10 });
+
 }
 
 // Called by PlayBuffer every frame (60 times a second!)
@@ -259,6 +259,7 @@ int MainGameExit( void )
 	return PLAY_OK;
 }
 
+
 //what are the directions a gameobject can chose to move in
 enum Direction
 {
@@ -272,6 +273,7 @@ enum Direction
 	DIRECTION_NORTH_WEST,
 	IDLE,
 };
+
 
 void HandlePlayerControls()
 {
@@ -350,46 +352,8 @@ void HandlePlayerControls()
 	}
 
 
-
-
-	// FIRE WEAPON
-	if (Play::KeyPressed(VK_LBUTTON)) // Mouse Button
-	{
-		int p = Play::CreateGameObject(projectile, player.pos, 30, "bullet");
-		//Play::GetGameObject(p).velocity = Vector2D( 10, 10 );
-		GameObject& nya = Play::GetGameObject(p);
-		nya.animSpeed = 0.1f;
-
-		// Find x and y of mouse relative to position
-		Point2D mousePos = Play::GetMousePos();
-		int x = floor(((mousePos.x + camera.GetXOffset()) - player.pos.x));
-		int y = floor(((mousePos.y + camera.GetYOffset()) - player.pos.y));
-		std::cout << x << std::endl;
-		std::cout << y << std::endl;
-
-		int length = sqrt(x * x + y * y) / 10;
-		nya.velocity = Vector2D(x / length, y / length);
-	}
-
-	// Player bounds checking
-	// Issue -- with camera implementation, it may not look like it is leaving display area...
-	//if (Play::IsLeavingDisplayArea(player))
-	//	if ((player.pos.y > DISPLAY_HEIGHT && player.velocity.y > 0)
-	//		|| (player.velocity.y < 0 && player.pos.y < 0))
-	//		player.velocity.y = 0;
-	//if ((player.pos.x > DISPLAY_WIDTH && player.velocity.x > 0)
-	//	|| (player.velocity.x < 0 && player.pos.x < 0))
-	//	player.velocity.x = 0;
-
-	// Bounding player
-	//if (player.pos.x > )
-
-	player.pos = Point2D(floor(player.pos.x), floor(player.pos.y));
-}
-
 void UpdateGameObjects()
 {
-  // Update camera
 	UpdateCamera();
 
 	// BACKGROUND MUST BE UPDATED FIRST
@@ -397,6 +361,11 @@ void UpdateGameObjects()
 
 	// Update projectiles
 	UpdateProjectiles();
+
+  	// for debug
+	for (auto c : level.getCollisionObjects()) {
+		PlayGraphics::Instance().DrawRect(c.getTopleft() - camera.GetOffset(), c.getBottomRight() - camera.GetOffset(), {255, 0, 0}, false);
+	}
   
   // Update player and shadow
 	GameObject& player = Play::GetGameObject(playerid);
@@ -404,7 +373,14 @@ void UpdateGameObjects()
 	shadowGO.pos.x = player.pos.x - 30;
 	shadowGO.pos.y = player.pos.y + 50;
 	DrawOffset(&shadowGO);
-	DrawOffset(&player);
+
+
+	// for debug
+	for (auto c : level.getCollisionObjects()) {
+		PlayGraphics::Instance().DrawRect(c.getTopleft() - camera.GetOffset(), c.getBottomRight() - camera.GetOffset(), {255, 0, 0}, false);
+	}
+
+
 }
 
 void UpdateProjectiles()
@@ -424,7 +400,6 @@ void UpdateProjectiles()
 
 		DrawOffset(&p);
 	}
-
 
 }
 
