@@ -2,6 +2,7 @@
 #define PLAY_USING_GAMEOBJECT_MANAGER
 #include "Play.h"
 #include "Camera.h"
+#include "Level.h"
 
 int DISPLAY_WIDTH = 1280;
 int DISPLAY_HEIGHT = 800;
@@ -18,6 +19,16 @@ struct GameState
 	float angle; // Angle is the speed of bidirectional movement
 };
 
+enum GameStateType
+{
+	menu,
+	cutscene,
+	play,
+	pause,
+	gameWin,
+	gameLose,
+};
+
 //what are the types of game objects
 enum GameObjectType
 {
@@ -30,36 +41,48 @@ enum GameObjectType
 };
 
 void HandlePlayerControls();
+void UpdateCamera();
+void UpdateProjectiles();
 void UpdateGameObjects();
+
 void DrawOffset(GameObject* go);
 void DrawBackground();
 bool OutOfBounds(GameObject* go);
 
 GameState gameState;
 
-std::string message = "";
+GameStateType state;
 
 Camera camera(0,0,DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
 float wBound;
 float hBound;
 
+Level level;
+
 void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 {
 
-	//approximate directional movement
-	gameState.angle = gameState.speed * 0.7;
-	
 	//must be done before creating game objects	
 	Play::CreateManager( DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_SCALE );
 	Play::CentreAllSpriteOrigins();
 
 	// Set default game objects
 	Play::CreateGameObject(angel, { DISPLAY_WIDTH/2,DISPLAY_HEIGHT/2 }, 100, "angel");
-	Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
 
-	wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
-	hBound = 7 / 4 * Play::GetSpriteHeight("MarsBG");
+	level = Level::Level("Data\\Levels\\", "island", "Data\\Levels\\test_map.xml");
+
+	//Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
+
+	//wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
+	//hBound = 7 / 4 * Play::GetSpriteHeight("MarsBG");
+
+	wBound = level.getWidth();
+	hBound = level.getHeight();
+
+	//approximate directional movement
+	gameState.angle = gameState.speed * 0.7;
+
 	//Play::LoadBackground("Data\\Sprites\\MarsBG2.png");
 	//does file exist, read file
 	//std::ifstream afile = std::ifstream("config.txt");
@@ -77,8 +100,28 @@ bool MainGameUpdate( float elapsedTime )
 	// Delta time
 	gameState.timer += elapsedTime;
 
-	HandlePlayerControls();
-	UpdateGameObjects();
+	// Placeholders of menu and such
+	if (state == menu)
+	{
+		//Play::DrawFontText("132px", "RIXA",
+		//	{ DISPLAY_WIDTH / 2, 100 }, Play::CENTRE);
+		Play::DrawSprite("MarsBG", { 0,0 }, 0);
+		Play::DrawSprite("title", { DISPLAY_WIDTH / 2, 100 }, 0);
+
+		Play::DrawFontText("64px", "PRESS SPACE TO START",
+			{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 300 }, Play::CENTRE);
+
+		if(Play::KeyPressed(VK_SPACE))
+		{
+			state = play;
+		}
+	}
+	else if (state == play)
+	{
+		HandlePlayerControls();
+		level.display(-camera.GetXOffset(), -camera.GetYOffset());
+		UpdateGameObjects();
+	}
 
 	//draw everything
 	Play::PresentDrawingBuffer();
@@ -229,32 +272,26 @@ void HandlePlayerControls()
 
 void UpdateGameObjects()
 {
-	GameObject& player = Play::GetGameObjectByType(angel);
-	GameObject& shadowGO = Play::GetGameObjectByType(shadow);
-
-
-	// Camera bounding for level
-	if(player.pos.x > 3/2 * wBound) // R Bound
-	{
-		camera.Follow(wBound, player.pos.y);
-	}
-	else if(player.pos.x < - 3 / 2 * wBound) // L Bound
-	{
-		camera.Follow(-wBound, player.pos.y);
-	}
-	else if(player.pos.y < - hBound) // Top of the level bound
-	{
-		camera.Follow(player.pos.x, - hBound);
-	}
-	else // Otherwise
-	{
-		camera.Follow(player.pos.x, player.pos.y);
-	}
+  // Update camera
+	UpdateCamera();
 
 	// BACKGROUND MUST BE UPDATED FIRST
-	DrawBackground();
+	//DrawBackground();
 
 	// Update projectiles
+	UpdateProjectiles();
+  
+  // Update player and shadow
+	GameObject& player = Play::GetGameObjectByType(angel);
+  GameObject& shadowGO = Play::GetGameObjectByType(shadow);
+	shadowGO.pos.x = player.pos.x - 30;
+	shadowGO.pos.y = player.pos.y + 50;
+	DrawOffset(&shadowGO);
+	DrawOffset(&player);
+}
+
+void UpdateProjectiles()
+{
 	std::vector<int> pv = Play::CollectGameObjectIDsByType(projectile);
 
 	for (int id : pv)
@@ -262,7 +299,7 @@ void UpdateGameObjects()
 		GameObject& p = Play::GetGameObject(id);
 
 		// Destroy out of bounds bullets
-		if(OutOfBounds(&p))
+		if (OutOfBounds(&p))
 		{
 			Play::DestroyGameObject(id);
 			continue;
@@ -270,11 +307,40 @@ void UpdateGameObjects()
 
 		DrawOffset(&p);
 	}
-	shadowGO.pos.x = player.pos.x - 30;
-	shadowGO.pos.y = player.pos.y + 50;
-	DrawOffset(&shadowGO);
-	DrawOffset(&player);
 
+
+}
+
+
+void UpdateCamera()
+{
+	GameObject& player = Play::GetGameObjectByType(angel);
+
+	// Camera bounding for level
+	if (player.pos.x > 3 / 2 * wBound) // R Bound
+	{
+		camera.Follow(wBound, player.pos.y);
+	}
+	else if (player.pos.x < -3 / 2 * wBound) // L Bound
+	{
+		camera.Follow(-wBound, player.pos.y);
+	}
+	else if (player.pos.y < -hBound) // Top of the level bound
+	{
+		camera.Follow(player.pos.x, -hBound);
+	}
+	else if (player.pos.x < -3 / 2 * wBound && player.pos.y < -hBound)
+	{
+		camera.Follow(-wBound, -hBound);
+	}
+	else if (player.pos.x < 3 / 2 * wBound && player.pos.y < -hBound)
+	{
+		camera.Follow(wBound, -hBound);
+	}
+	else // Otherwise
+	{
+		camera.Follow(player.pos.x, player.pos.y);
+	}
 }
 
 
