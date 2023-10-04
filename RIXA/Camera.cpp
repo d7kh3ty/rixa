@@ -35,3 +35,7 @@ void Camera::Follow(float x, float y)
 	//std::cout << "xOff: " << xOffset_ << "\n";
 	//std::cout << "yOff: " << yOffset_ << "\n";
 }
+
+Point2f Camera::GetOffset() {
+	return Point2f(xOffset_, yOffset_);
+}
