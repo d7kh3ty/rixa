@@ -97,41 +97,83 @@ Level::Level(string path, string tileset_s, string level) {
 	levels.erase(0, namep+6);
 	string name = levels.substr(0, levels.find("\""));
 	
-	stop = false;
-	// get chunks
-	while (!stop)
-	{
+	/// FORGIVE ME, GODS OF EFFICIENCY
+	/// I KNOW THIS IS NOT THE BEST WAY TO DO THIS
+	/// BUT I DO NOT HAVE TIME TO IMPLEMENT THE BEST SOLUTION
 
-		size_t object = levels.find("object");
-		levels.erase(0, object+6);
-		//string name = levels.substr(0, levels.find("\""));
+	if (name == "collision") {
+		stop = false;
+		// get chunks
+		while (!stop)
+		{
 
-		size_t x = levels.find("x=\"") + 3;
-		levels.erase(0, x);
-		int xi = stoi(levels.substr(0, levels.find("\"")));
+			size_t object = levels.find("object");
+			levels.erase(0, object + 6);
+			//string name = levels.substr(0, levels.find("\""));
 
-		size_t y = levels.find("y=\"") + 3;
-		levels.erase(0, y);
-		int yi = stoi(levels.substr(0, levels.find("\"")));
+			size_t x = levels.find("x=\"") + 3;
+			levels.erase(0, x);
+			int xi = stoi(levels.substr(0, levels.find("\"")));
 
-		size_t width = levels.find("width=\"") + 7;
-		levels.erase(0, width);
-		int widthi = stoi(levels.substr(0, levels.find("\"")));
+			size_t y = levels.find("y=\"") + 3;
+			levels.erase(0, y);
+			int yi = stoi(levels.substr(0, levels.find("\"")));
 
-		size_t height = levels.find("height=\"") + 8;
-		levels.erase(0, height);
-		int heighti = stoi(levels.substr(0, levels.find("\"")));
-		levels.erase(0, levels.find("\""));
+			size_t width = levels.find("width=\"") + 7;
+			levels.erase(0, width);
+			size_t width = levels.find("width=\"") + 7;
+			levels.erase(0, width);
+			int widthi = stoi(levels.substr(0, levels.find("\"")));
 
-		collisionObjects.push_back(CollisionBox({ xi, yi }, { xi + widthi, yi + heighti }));
+			size_t height = levels.find("height=\"") + 8;
+			levels.erase(0, height);
+			int heighti = stoi(levels.substr(0, levels.find("\"")));
+			levels.erase(0, levels.find("\""));
 
-		// disgusting
-		if (levels.find("</objectgroup>") <= 5) {
-			stop = true;
-			break;
+			int widthi = stoi(levels.substr(0, levels.find("\"")));
+
+			size_t height = levels.find("height=\"") + 8;
+			levels.erase(0, height);
+			int heighti = stoi(levels.substr(0, levels.find("\"")));
+			levels.erase(0, levels.find("\""));
+
+			collisionObjects.push_back(CollisionBox({ xi, yi }, { xi + widthi, yi + heighti }));
+
+			// disgusting
+			if (levels.find("</objectgroup>") <= 5) {
+				stop = true;
+				break;
+			}
 		}
-		
 	}
+
+	if (name == "enemy1") {
+		stop = false;
+		// get chunks
+		while (!stop)
+		{
+			size_t object = levels.find("object");
+			levels.erase(0, object + 6);
+			//string name = levels.substr(0, levels.find("\""));
+
+			size_t x = levels.find("x=\"") + 3;
+			levels.erase(0, x);
+			int xi = stoi(levels.substr(0, levels.find("\"")));
+
+			size_t y = levels.find("y=\"") + 3;
+			levels.erase(0, y);
+			int yi = stoi(levels.substr(0, levels.find("\"")));
+
+			//collisionObjects.push_back(CollisionBox({ xi, yi }, { xi + widthi, yi + heighti }));
+
+			// disgusting
+			if (levels.find("</objectgroup>") <= 5) {
+				stop = true;
+				break;
+			}
+		}
+	}
+	//etc etc
 
 
 
