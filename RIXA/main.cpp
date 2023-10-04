@@ -88,25 +88,25 @@ public:
 		Play::GetGameObject(id).velocity = vel;
 	}
 
-	// Updating Movements
-	void Update() {
+	// update everything 
+	void update() {
 
 		GameObject& player = Play::GetGameObject(playerid);
 		GameObject& enemy = Play::GetGameObject(id);
 		//Play::SetSprite(enemy, "coins_2", 0.25f); //
+		int x = floor(((player.pos.x + camera.GetXOffset()) - enemy.pos.x));
+		int y = floor(((player.pos.y + camera.GetYOffset()) - enemy.pos.y));
+		float length = sqrt(x * x + y * y);
 
 		// Shoot in direction of player
-		if (Play::RandomRoll(100) == 100) {
+		if (Play::RandomRoll(100) > 99) {
 			int pid = Play::CreateGameObject(e_projectile, { enemy.pos.x, enemy.pos.y }, 90, "bullet");
 			GameObject& bullet = Play::GetGameObject(pid);
 			Play::PlayAudio("tool");
-			
-			int x = floor(((player.pos.x + camera.GetXOffset()) - enemy.pos.x));
-			int y = floor(((player.pos.y + camera.GetYOffset()) - enemy.pos.y));
-			int length = sqrt(x * x + y * y) / 5;
-			bullet.velocity = Vector2D(x / length, y / length);
-
+			float speed_check = length / bulletSpeed;
+			bullet.velocity = Vector2D(x / speed_check, y / speed_check);
 		}
+
 		DrawOffset(&enemy);
 
 		// Destroy out of bounds game objects
@@ -133,11 +133,18 @@ public:
 				Play::DestroyGameObject(pid);
 			}
 		}
+
+		if (length < detectionRange) {
+			playerDetected = true;
+		}
 	}
 
 private:
 	EnemyType type;
 	int id;
+	int bulletSpeed = 5;
+	int detectionRange = 10;
+	bool playerDetected = false;
 };
 
 //what is the state of the game
@@ -239,7 +246,7 @@ bool MainGameUpdate( float elapsedTime )
 		//ursula_L.UpdateEnemyProjectiles();
 		for (auto enemy : gameState.enemies)
 		{
-			enemy.Update();
+			enemy.update();
 		}
 		DrawOffset(&player);
 	}
