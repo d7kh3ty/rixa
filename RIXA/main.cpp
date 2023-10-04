@@ -7,18 +7,6 @@
 int DISPLAY_WIDTH = 1280;
 int DISPLAY_HEIGHT = 800;
 int DISPLAY_SCALE = 1;
-
-//what is the state of the game
-struct GameState
-{
-	float timer = 0;
-	int spriteId = 0;
-
-	// Player attributes
-	int speed = 10;
-	float angle; // Angle is the speed of bidirectional movement
-};
-
 enum GameStateType
 {
 	menu,
@@ -104,7 +92,7 @@ public:
 	}
 
 	// Updating Movements
-	void UpdateEnemy() {
+	void Update() {
 
 		GameObject& enemy = Play::GetGameObject(id);
 		//Play::SetSprite(enemy, "coins_2", 0.25f); //
@@ -126,11 +114,6 @@ public:
 			Play::DestroyGameObject(id);
 		}
 
-
-	}
-
-	void UpdateEnemyProjectiles()
-	{
 		// We can use the update projectiles to handle this
 		GameObject& player = Play::GetGameObject(playerid);
 		std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
@@ -158,10 +141,20 @@ private:
 	int id;
 };
 
-// Enemies
-Enemy v_cershinsky;
-Enemy j_bidet;
-Enemy ursula_L;
+//what is the state of the game
+struct GameState
+{
+	float timer = 0;
+	int spriteId = 0;
+
+	// Player attributes
+	int speed = 10;
+	float angle; // Angle is the speed of bidirectional movement
+
+	vector<Enemy> enemies;
+};
+
+
 
 void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 {
@@ -192,14 +185,14 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	//std::getline(afile, message);
 	//afile.close();
 
-	Play::CreateGameObject(shadow, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 } ,  0, "generic_shadow_one");
+	//Play::CreateGameObject(shadow, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 } ,  0, "generic_shadow_one");
 
 	// DVD: enemies 
-	v_cershinsky = Enemy(TYPE_ENEMY1, {500, 500}, {10,10});
+	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, {500, 500}, {10,10}));
 
-	j_bidet = Enemy(TYPE_ENEMY1, { 600, 500 }, { -10,10 });
+	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, { 600, 500 }, { -10,10 }));
 
-	ursula_L = Enemy(TYPE_ENEMY1, { 500, 600 }, { 10,-10 });
+	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, { 500, 600 }, { 10,-10 }));
 
 }
 
@@ -240,6 +233,10 @@ bool MainGameUpdate( float elapsedTime )
 
 		ursula_L.UpdateEnemy();
 		ursula_L.UpdateEnemyProjectiles();
+		for (auto enemy : gameState.enemies)
+		{
+			enemy.Update();
+		}
 	}
 
 	//draw everything
@@ -305,7 +302,7 @@ void HandlePlayerControls()
 		direction = DIRECTION_SOUTH_WEST;
 	}
 	if (Play::KeyDown(0x57) && Play::KeyDown(0x41)) // W & A
-	{	
+	{
 		direction = DIRECTION_NORTH_WEST;
 	}
 
@@ -316,7 +313,7 @@ void HandlePlayerControls()
 		Play::SetSprite(player, "angel_walk_north", 0.0f);
 		player.velocity = { 0, 0 };
 		break;
-	
+
 	case DIRECTION_NORTH:
 		Play::SetSprite(player, "angel_walk_north", 0.07f);
 		player.velocity = { 0, -gameState.speed };
@@ -350,6 +347,7 @@ void HandlePlayerControls()
 		player.velocity = { -gameState.angle, -gameState.angle };
 		break;
 	}
+}
 
 
 void UpdateGameObjects()
@@ -369,10 +367,10 @@ void UpdateGameObjects()
   
   // Update player and shadow
 	GameObject& player = Play::GetGameObject(playerid);
-    GameObject& shadowGO = Play::GetGameObjectByType(shadow);
-	shadowGO.pos.x = player.pos.x - 30;
-	shadowGO.pos.y = player.pos.y + 50;
-	DrawOffset(&shadowGO);
+    //GameObject& shadowGO = Play::GetGameObjectByType(shadow);
+	//shadowGO.pos.x = player.pos.x - 30;
+	//shadowGO.pos.y = player.pos.y + 50;
+	//DrawOffset(&shadowGO);
 
 
 	// for debug
