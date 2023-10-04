@@ -74,7 +74,7 @@ public:
 	Enemy() {}; 
 	Enemy(EnemyType ENEMY_TYPE, Point2f pos, Vector2D vel) {
 		// Set sprite, radius and speeds depending on the enemy type given
-		if(ENEMY_TYPE == TYPE_ENEMY1)
+		if (ENEMY_TYPE == TYPE_ENEMY1)
 		{
 			id = Play::CreateGameObject(enemy, pos, 10, "coin");
 			Play::GetGameObject(id).animSpeed = 1;
@@ -199,6 +199,9 @@ bool MainGameUpdate( float elapsedTime )
 	// Delta time
 	gameState.timer += elapsedTime;
 
+	// Get player object
+	GameObject& player = Play::GetGameObject(playerid);
+
 	// Placeholders of menu and such
 	if (state == menu)
 	{
@@ -234,6 +237,7 @@ bool MainGameUpdate( float elapsedTime )
 		{
 			enemy.Update();
 		}
+		DrawOffset(&player);
 	}
 
 	//draw everything
