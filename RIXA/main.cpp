@@ -25,10 +25,29 @@ enum GameObjectType
 	TYPE_NULL = -1,
 	angel,
 	projectile,
+	e_projectile,
 	enemy,
 	background,
 };
 
+enum EnemyType
+{
+	// THIS MUST BE DONE
+	TYPE_ENEMY1=101,
+	TYPE_ENEMY2=102,
+	TYPE_ENEMY3=103,
+	TYPE_ENEMY4=104,
+};
+// Player states
+enum AngelState
+{
+	STATE_APPEAR = 0,
+	STATE_HALT,
+	STATE_PLAY,
+	STATE_DEAD,
+};
+
+AngelState angelState = STATE_APPEAR;
 void HandlePlayerControls();
 void UpdateCamera();
 void UpdateProjectiles();
@@ -38,8 +57,6 @@ void DrawOffset(GameObject* go);
 void DrawBackground();
 bool OutOfBounds(GameObject* go);
 
-
-GameStateType state;
 
 Camera camera(0,0,DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
@@ -172,118 +189,13 @@ struct GameState
 	int spriteId = 0;
 
 	// Player attributes
-	int speed = 10;
+	int speed = 7;
 	float angle; // Angle is the speed of bidirectional movement
 
 	vector<Enemy> enemies;
 };
 
 GameState gameState;
-
-void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
-{
-
-	//must be done before creating game objects	
-	Play::CreateManager( DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_SCALE );
-	Play::CentreAllSpriteOrigins();
-
-	// Set default game objects
-	Play::CreateGameObject(angel, { DISPLAY_WIDTH/2+600,DISPLAY_HEIGHT/2+200 }, 100, "angel");
-
-	level = Level::Level("Data\\Levels\\", "island", "Data\\Levels\\test_map.xml");
-
-	//Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
-
-	//wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
-	//hBound = 7 / 4 * Play::GetSpriteHeight("MarsBG");
-
-	wBound = level.getWidth();
-	hBound = level.getHeight();
-
-	//approximate directional movement
-	gameState.angle = gameState.speed * 0.7;
-
-	//Play::LoadBackground("Data\\Sprites\\MarsBG2.png");
-	//does file exist, read file
-	//std::ifstream afile = std::ifstream("config.txt");
-	//std::getline(afile, message);
-	//afile.close();
-
-	//Play::CreateGameObject(shadow, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 } ,  0, "generic_shadow_one");
-
-	// DVD: enemies 
-	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, {500, 500}, {0,0}));
-
-	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, { 600, 500 }, { 0,0 }));
-
-	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, { 500, 600 }, { 0,0 }));
-
-}
-
-// Called by PlayBuffer every frame (60 times a second!)
-bool MainGameUpdate( float elapsedTime )
-{
-	// Delta time
-	gameState.timer += elapsedTime;
-
-	// Get player object
-	GameObject& player = Play::GetGameObject(playerid);
-
-	// Placeholders of menu and such
-	if (state == menu)
-	{
-		//Play::DrawFontText("132px", "RIXA",
-		//	{ DISPLAY_WIDTH / 2, 100 }, Play::CENTRE);
-		Play::DrawSprite("MarsBG", { 0,0 }, 0);
-		Play::DrawSprite("title", { DISPLAY_WIDTH / 2, 100 }, 0);
-
-		Play::DrawFontText("64px", "PRESS SPACE TO START",
-			{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 300 }, Play::CENTRE);
-
-		if(Play::KeyPressed(VK_SPACE))
-		{
-			state = play;
-		}
-	}
-	else if (state == play)
-	{
-		HandlePlayerControls();
-		level.display(-camera.GetXOffset(), -camera.GetYOffset());
-		UpdateGameObjects();
-		// DVD
-		//"Any similarity with fictitious events or characters was purely coincidental."
-		//v_cershinsky.UpdateEnemy();
-		//v_cershinsky.UpdateEnemyProjectiles();
-
-		//j_bidet.UpdateEnemy();
-		//j_bidet.UpdateEnemyProjectiles();
-
-		//ursula_L.UpdateEnemy();
-		//ursula_L.UpdateEnemyProjectiles();
-		for (auto i = 0; i != gameState.enemies.size(); i++)
-		{
-			gameState.enemies[i].update();
-		}
-		DrawOffset(&player);
-
-	}
-
-	//draw everything
-	Play::PresentDrawingBuffer();
-	return Play::KeyDown(VK_ESCAPE);
-}
-
-// Gets called once when the player quits the game 
-int MainGameExit( void )
-{
-	//write to the config file
-	//std::ofstream afile = std::ofstream("config.txt");
-	//afile << "Hello World";
-	//afile.close();
-
-	Play::DestroyManager();
-	return PLAY_OK;
-}
 
 
 //what are the directions a gameobject can chose to move in
@@ -333,14 +245,7 @@ void HandlePlayerControls()
 	if (Play::KeyDown(0x57) && Play::KeyDown(0x41)) // W & A
 	{
 		direction = DIRECTION_NORTH_WEST;
-	}
-
-	for (auto c : level.getCollisionObjects()) {
-		if (c.checkColliding(player.pos.x, player.pos.y, 32)) {
-			player.pos = player.oldPos;
-		}
-	}
-	
+	}	
 	// Player bounds checking
 	// Issue -- with camera implementation, it may not look like it is leaving display area...
 	//if (Play::IsLeavingDisplayArea(player))
@@ -383,17 +288,45 @@ void HandlePlayerControls()
 		break;
 	case DIRECTION_WEST:
 		Play::SetSprite(player, "angel_walk_west", 0.07f);
-		player.velocity = { -gameState.angle, 0 };
+		player.velocity = { -gameState.speed, 0 };
 		break;
 	case DIRECTION_NORTH_WEST:
 		Play::SetSprite(player, "angel_walk_northwest", 0.07f);
 		player.velocity = { -gameState.angle, -gameState.angle };
 		break;
 	}
+	
+	// FIRE WEAPON
+	if (Play::KeyPressed(VK_LBUTTON)) // Mouse Button
+	{
+		int p = Play::CreateGameObject(projectile, player.pos, 30, "bullet");
+		//Play::GetGameObject(p).velocity = Vector2D( 10, 10 );
+		GameObject& nya = Play::GetGameObject(p);
+		nya.animSpeed = 0.1f;
+
+		// Find x and y of mouse relative to position
+		Point2D mousePos = Play::GetMousePos();
+		int x = floor(((mousePos.x + camera.GetXOffset()) - player.pos.x));
+		int y = floor(((mousePos.y + camera.GetYOffset()) - player.pos.y));
+		std::cout << x << std::endl;
+		std::cout << y << std::endl;
+
+		int length = sqrt(x * x + y * y) / 10;
+		nya.velocity = Vector2D(x / length, y / length);
+	}
+
+	for (auto c : level.getCollisionObjects()) {
+		if (c.checkColliding(player.pos.x, player.pos.y, 64)) {
+			player.pos = player.oldPos;
+			player.velocity = { 0, 0 };
+		}
+	}
+
 }
 
 void UpdateGameObjects()
 {
+
 	UpdateCamera();
 
 	// BACKGROUND MUST BE UPDATED FIRST
@@ -408,19 +341,10 @@ void UpdateGameObjects()
 	}
   
   // Update player and shadow
-	GameObject& player = Play::GetGameObject(playerid);
     //GameObject& shadowGO = Play::GetGameObjectByType(shadow);
 	//shadowGO.pos.x = player.pos.x - 30;
 	//shadowGO.pos.y = player.pos.y + 50;
 	//DrawOffset(&shadowGO);
-
-
-	// for debug
-	for (auto c : level.getCollisionObjects()) {
-		PlayGraphics::Instance().DrawRect(c.getTopleft() - camera.GetOffset(), c.getBottomRight() - camera.GetOffset(), {255, 0, 0}, false);
-	}
-
-	DrawOffset(&player);
 
 }
 
@@ -503,4 +427,109 @@ void DrawBackground()
 bool OutOfBounds(GameObject* go)
 {
 	return abs(go->pos.x) > wBound + 1000 || abs(go->pos.y) > hBound + 1000;
+}
+
+void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
+{
+
+	//must be done before creating game objects	
+	Play::CreateManager( DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_SCALE );
+	Play::CentreAllSpriteOrigins();
+
+	// Set default game objects
+	//Play::CreateGameObject(angel, { DISPLAY_WIDTH/2+600,DISPLAY_HEIGHT/2+200 }, 100, "angel");
+	playerid = Play::CreateGameObject(angel, { DISPLAY_WIDTH/2+600,DISPLAY_HEIGHT/2+200 }, 100, "angel");
+	level = Level::Level("Data\\Levels\\", "island", "Data\\Levels\\test_map.xml");
+
+	//Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
+
+	//wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
+	//hBound = 7 / 4 * Play::GetSpriteHeight("MarsBG");
+
+	wBound = level.getWidth();
+	hBound = level.getHeight();
+
+	//approximate directional movement
+	gameState.angle = gameState.speed * 0.7;
+
+	//Play::LoadBackground("Data\\Sprites\\MarsBG2.png");
+	//does file exist, read file
+	//std::ifstream afile = std::ifstream("config.txt");
+	//std::getline(afile, message);
+	//afile.close();
+
+	//Play::CreateGameObject(shadow, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 } ,  0, "generic_shadow_one");
+
+	// DVD: enemies 
+	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, {500, 500}, {0,0}));
+
+	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, { 600, 500 }, { 0,0 }));
+
+	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, { 500, 600 }, { 0,0 }));
+
+}
+
+// Called by PlayBuffer every frame (60 times a second!)
+bool MainGameUpdate( float elapsedTime )
+{
+	// Delta time
+	gameState.timer += elapsedTime;
+
+	// Get player object
+	GameObject& player = Play::GetGameObject(playerid);
+
+	// Placeholders of menu and such
+	if (state == menu)
+	{
+		//Play::DrawFontText("132px", "RIXA",
+		//	{ DISPLAY_WIDTH / 2, 100 }, Play::CENTRE);
+		Play::DrawSprite("MarsBG", { 0,0 }, 0);
+		Play::DrawSprite("title", { DISPLAY_WIDTH / 2, 100 }, 0);
+
+		Play::DrawFontText("64px", "PRESS SPACE TO START",
+			{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 300 }, Play::CENTRE);
+
+		if (Play::KeyPressed(VK_SPACE))
+		{
+			state = play;
+		}
+	}
+	else if (state == play)
+	{
+		HandlePlayerControls();
+		level.display(-camera.GetXOffset(), -camera.GetYOffset());
+		UpdateGameObjects();
+		// DVD
+		//"Any similarity with fictitious events or characters was purely coincidental."
+		//v_cershinsky.UpdateEnemy();
+		//v_cershinsky.UpdateEnemyProjectiles();
+
+		//j_bidet.UpdateEnemy();
+		//j_bidet.UpdateEnemyProjectiles();
+
+		//ursula_L.UpdateEnemy();
+		//ursula_L.UpdateEnemyProjectiles();
+		for (auto i = 0; i != gameState.enemies.size(); i++)
+		{
+			gameState.enemies[i].update();
+		}
+		DrawOffset(&player);
+
+	}
+
+	//draw everything
+	Play::PresentDrawingBuffer();
+	return Play::KeyDown(VK_ESCAPE);
+}
+
+// Gets called once when the player quits the game 
+int MainGameExit( void )
+{
+	//write to the config file
+	//std::ofstream afile = std::ofstream("config.txt");
+	//afile << "Hello World";
+	//afile.close();
+
+	Play::DestroyManager();
+	return PLAY_OK;
 }
