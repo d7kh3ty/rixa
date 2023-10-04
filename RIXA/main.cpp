@@ -43,11 +43,11 @@ enum GameObjectType
 
 enum EnemyType
 {
-	// DVD 
-	TYPE_ENEMY1,
-	TYPE_ENEMY2,
-	TYPE_ENEMY3,
-	TYPE_ENEMY4,
+	// THIS MUST BE DONE
+	TYPE_ENEMY1=101,
+	TYPE_ENEMY2=102,
+	TYPE_ENEMY3=103,
+	TYPE_ENEMY4=104,
 };
 // Player states
 enum AngelState
@@ -79,6 +79,8 @@ float wBound;
 float hBound;
 
 Level level;
+
+int playerid;
 
 
 // DVD ENEMY CLASS
@@ -116,6 +118,7 @@ public:
 			bullet.rotSpeed = 1;
 			Play::PlayAudio("tool");
 		}
+		DrawOffset(&enemy);
 
 		// Destroy out of bounds game objects
 		if (OutOfBounds(&enemy)) {
@@ -123,13 +126,12 @@ public:
 		}
 
 
-		DrawOffset(&enemy);
 	}
 
-	void UpdateTools()
+	void UpdateEnemyProjectiles()
 	{
 		// We can use the update projectiles to handle this
-		GameObject& player = Play::GetGameObjectByType(angel);
+		GameObject& player = Play::GetGameObject(playerid);
 		std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
 
 		for (int pid : projectiles) {
@@ -168,7 +170,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	Play::CentreAllSpriteOrigins();
 
 	// Set default game objects
-	Play::CreateGameObject(angel, { DISPLAY_WIDTH/2,DISPLAY_HEIGHT/2 }, 100, "angel");
+	playerid =Play::CreateGameObject(angel, { DISPLAY_WIDTH/2,DISPLAY_HEIGHT/2 }, 100, "angel");
 
 	level = Level::Level("Data\\Levels\\", "island", "Data\\Levels\\test_map.xml");
 
@@ -229,13 +231,13 @@ bool MainGameUpdate( float elapsedTime )
 		// DVD
 		//"Any similarity with fictitious events or characters was purely coincidental."
 		v_cershinsky.UpdateEnemy();
-		v_cershinsky.UpdateTools();
+		v_cershinsky.UpdateEnemyProjectiles();
 
 		j_bidet.UpdateEnemy();
-		j_bidet.UpdateTools();
+		j_bidet.UpdateEnemyProjectiles();
 
 		ursula_L.UpdateEnemy();
-		ursula_L.UpdateTools();
+		ursula_L.UpdateEnemyProjectiles();
 	}
 
 	//draw everything
@@ -271,7 +273,7 @@ enum Direction
 
 void HandlePlayerControls()
 {
-	GameObject& player = Play::GetGameObjectByType(angel);
+	GameObject& player = Play::GetGameObject(playerid);
 
 	Direction direction = IDLE;
 
@@ -395,7 +397,7 @@ void UpdateGameObjects()
 	UpdateProjectiles();
   
   // Update player and shadow
-	GameObject& player = Play::GetGameObjectByType(angel);
+	GameObject& player = Play::GetGameObject(playerid);
     GameObject& shadowGO = Play::GetGameObjectByType(shadow);
 	shadowGO.pos.x = player.pos.x - 30;
 	shadowGO.pos.y = player.pos.y + 50;
@@ -426,7 +428,7 @@ void UpdateProjectiles()
 
 void UpdateCamera()
 {
-	GameObject& player = Play::GetGameObjectByType(angel);
+	GameObject& player = Play::GetGameObject(playerid);
 
 	// Camera bounding for level
 	if (player.pos.x > 3 / 2 * wBound) // R Bound
