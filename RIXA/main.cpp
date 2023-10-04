@@ -35,29 +35,9 @@ enum GameObjectType
 	TYPE_NULL = -1,
 	angel,
 	projectile,
-	e_projectile,
 	enemy,
 	background,
 };
-
-enum EnemyType
-{
-	// THIS MUST BE DONE
-	TYPE_ENEMY1=101,
-	TYPE_ENEMY2=102,
-	TYPE_ENEMY3=103,
-	TYPE_ENEMY4=104,
-};
-// Player states
-enum AngelState
-{
-	STATE_APPEAR = 0,
-	STATE_HALT,
-	STATE_PLAY,
-	STATE_DEAD,
-};
-
-AngelState angelState = STATE_APPEAR;
 
 void HandlePlayerControls();
 void UpdateCamera();
@@ -72,96 +52,12 @@ GameState gameState;
 
 GameStateType state;
 
-Camera camera(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+Camera camera(0,0,DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
 float wBound;
 float hBound;
 
 Level level;
-
-int playerid;
-
-
-// DVD ENEMY CLASS
-class Enemy {
-public:
-	// constructors
-	Enemy() {}; 
-	Enemy(EnemyType ENEMY_TYPE, Point2f pos, Vector2D vel) {
-		// Set sprite, radius and speeds depending on the enemy type given
-		if(ENEMY_TYPE == TYPE_ENEMY1)
-		{
-			id = Play::CreateGameObject(enemy, pos, 10, "coin");
-			Play::GetGameObject(id).animSpeed = 1;
-		}
-		else
-		{
-			// If enemy type does not match
-			return;
-		}
-
-		Play::GetGameObject(id).velocity = vel;
-	}
-
-	// Updating Movements
-	void UpdateEnemy() {
-
-		GameObject& enemy = Play::GetGameObject(id);
-		//Play::SetSprite(enemy, "coins_2", 0.25f); //
-
-
-
-		// Randomly shoot
-		if (Play::RandomRoll(100) == 100) {
-			int pid = Play::CreateGameObject(e_projectile, { enemy.pos.x, enemy.pos.y }, 90, "bullet");
-			GameObject& bullet = Play::GetGameObject(pid);
-			bullet.velocity = Point2f(Play::RandomRollRange(-1, 1) * 4, 4);
-			bullet.rotSpeed = 1;
-			Play::PlayAudio("tool");
-		}
-		DrawOffset(&enemy);
-
-		// Destroy out of bounds game objects
-		if (OutOfBounds(&enemy)) {
-			Play::DestroyGameObject(id);
-		}
-
-
-	}
-
-	void UpdateEnemyProjectiles()
-	{
-		// We can use the update projectiles to handle this
-		GameObject& player = Play::GetGameObject(playerid);
-		std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
-
-		for (int pid : projectiles) {
-			GameObject& bullet = Play::GetGameObject(pid);
-			if (angelState != STATE_DEAD && Play::IsColliding(bullet, player)) {
-				angelState = STATE_DEAD;
-				Play::PlayAudio("die");
-			}
-
-			// if want more bullet functions?
-
-			DrawOffset(&bullet);
-
-			if (OutOfBounds(&bullet))
-			{
-				Play::DestroyGameObject(pid);
-			}
-		}
-	}
-
-private:
-	EnemyType type;
-	int id;
-};
-
-// Enemies
-Enemy v_cershinsky;
-Enemy j_bidet;
-Enemy ursula_L;
 
 void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 {
@@ -171,7 +67,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	Play::CentreAllSpriteOrigins();
 
 	// Set default game objects
-	playerid = Play::CreateGameObject(angel, { DISPLAY_WIDTH/2+600,DISPLAY_HEIGHT/2+200 }, 100, "angel");
+	Play::CreateGameObject(angel, { DISPLAY_WIDTH/2+600,DISPLAY_HEIGHT/2+200 }, 100, "angel");
 
 	level = Level::Level("Data\\Levels\\", "island", "Data\\Levels\\test_map.xml");
 
@@ -191,16 +87,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	//std::ifstream afile = std::ifstream("config.txt");
 	//std::getline(afile, message);
 	//afile.close();
-
-	Play::CreateGameObject(shadow, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 } ,  0, "generic_shadow_one");
-
-	// DVD: enemies 
-	v_cershinsky = Enemy(TYPE_ENEMY1, {500, 500}, {10,10});
-
-	j_bidet = Enemy(TYPE_ENEMY1, { 600, 500 }, { -10,10 });
-
-	ursula_L = Enemy(TYPE_ENEMY1, { 500, 600 }, { 10,-10 });
-
+	
 }
 
 // Called by PlayBuffer every frame (60 times a second!)
@@ -215,7 +102,7 @@ bool MainGameUpdate( float elapsedTime )
 		//Play::DrawFontText("132px", "RIXA",
 		//	{ DISPLAY_WIDTH / 2, 100 }, Play::CENTRE);
 		Play::DrawSprite("MarsBG", { 0,0 }, 0);
-		Play::DrawSprite("title", { DISPLAY_WIDTH / 2, 300 }, 0);
+		Play::DrawSprite("title", { DISPLAY_WIDTH / 2, 100 }, 0);
 
 		Play::DrawFontText("64px", "PRESS SPACE TO START",
 			{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 300 }, Play::CENTRE);
@@ -230,16 +117,6 @@ bool MainGameUpdate( float elapsedTime )
 		HandlePlayerControls();
 		level.display(-camera.GetXOffset(), -camera.GetYOffset());
 		UpdateGameObjects();
-		// DVD
-		//"Any similarity with fictitious events or characters was purely coincidental."
-		v_cershinsky.UpdateEnemy();
-		v_cershinsky.UpdateEnemyProjectiles();
-
-		j_bidet.UpdateEnemy();
-		j_bidet.UpdateEnemyProjectiles();
-
-		ursula_L.UpdateEnemy();
-		ursula_L.UpdateEnemyProjectiles();
 	}
 
 	//draw everything
@@ -259,98 +136,86 @@ int MainGameExit( void )
 	return PLAY_OK;
 }
 
-
-//what are the directions a gameobject can chose to move in
-enum Direction
-{
-	DIRECTION_NORTH,
-	DIRECTION_NORTH_EAST,
-	DIRECTION_EAST,
-	DIRECTION_SOUTH_EAST,
-	DIRECTION_SOUTH,
-	DIRECTION_SOUTH_WEST,
-	DIRECTION_WEST,
-	DIRECTION_NORTH_WEST,
-	IDLE,
-};
-
-
 void HandlePlayerControls()
 {
-	GameObject& player = Play::GetGameObject(playerid);
+	GameObject& player = Play::GetGameObjectByType(angel);
 
-	Direction direction = IDLE;
-
-	if (Play::KeyDown(0x57)) { // W
-		direction = DIRECTION_NORTH;
-	}
-	if (Play::KeyDown(0x44)) { // D
-		direction = DIRECTION_EAST;
-	}
-	if (Play::KeyDown(0x53)) { // S
-		direction = DIRECTION_SOUTH;
-	}
-
-	if (Play::KeyDown(0x41)) { // A
-		direction = DIRECTION_WEST;
-	}
-	if (Play::KeyDown(0x57) && Play::KeyDown(0x44)) { // W & D
-		direction = DIRECTION_NORTH_EAST;
-	}
-	if (Play::KeyDown(0x53) && Play::KeyDown(0x44)) { // S & D
-		direction = DIRECTION_SOUTH_EAST;
-	}
-	if (Play::KeyDown(0x53) && Play::KeyDown(0x41)) // A & S
+	player.velocity = { 0, 0 };
+	if (Play::KeyDown(0x57)) // W
 	{
-		direction = DIRECTION_SOUTH_WEST;
-	}
-	if (Play::KeyDown(0x57) && Play::KeyDown(0x41)) // W & A
-	{	
-		direction = DIRECTION_NORTH_WEST;
-	}
-
-
-
-	switch (direction) {
-	case IDLE:
-		Play::SetSprite(player, "angel_walk_north", 0.0f);
-		player.velocity = { 0, 0 };
-		break;
-	
-	case DIRECTION_NORTH:
-		Play::SetSprite(player, "angel_walk_north", 0.07f);
 		player.velocity = { 0, -gameState.speed };
-		break;
-	case DIRECTION_NORTH_EAST:
-		Play::SetSprite(player, "angel_walk_northeast", 0.07f);
-		player.velocity = { gameState.angle, -gameState.angle };
-		break;
-	case DIRECTION_EAST:
-		Play::SetSprite(player, "angel_walk_east", 0.07f);
-		player.velocity = { gameState.speed, 0 };
-		break;
-	case DIRECTION_SOUTH_EAST:
-		Play::SetSprite(player, "angel_walk_southeast", 0.07f);
-		player.velocity = { gameState.angle, gameState.angle };
-		break;
-	case DIRECTION_SOUTH:
-		Play::SetSprite(player, "angel_walk_south", 0.07f);
-		player.velocity = { 0, gameState.speed };
-		break;
-	case DIRECTION_SOUTH_WEST:
-		Play::SetSprite(player, "angel_walk_southwest", 0.07f);
-		player.velocity = { -gameState.angle, gameState.angle };
-		break;
-	case DIRECTION_WEST:
-		Play::SetSprite(player, "angel_walk_west", 0.07f);
-		player.velocity = { -gameState.angle, 0 };
-		break;
-	case DIRECTION_NORTH_WEST:
-		Play::SetSprite(player, "angel_walk_northwest", 0.07f);
-		player.velocity = { -gameState.angle, -gameState.angle };
-		break;
+		if (Play::KeyDown(0x41)) // A
+			player.velocity = { -gameState.angle, -gameState.angle };
+		if (Play::KeyDown(0x44)) // D
+			player.velocity = { gameState.angle, -gameState.angle };
 	}
 
+	if (Play::KeyDown(0x53)) // S
+	{
+		player.velocity = { 0, gameState.speed };
+		if (Play::KeyDown(0x41)) // A
+			player.velocity = { -gameState.angle, gameState.angle };
+		if (Play::KeyDown(0x44)) // D
+			player.velocity = { gameState.angle, gameState.angle };
+	}
+
+	if (Play::KeyDown(0x41)) // A
+	{
+		player.velocity = { -gameState.speed, 0 };
+		if (Play::KeyDown(0x57)) // W
+			player.velocity = { -gameState.angle, -gameState.angle };
+		if (Play::KeyDown(0x53)) // S
+			player.velocity = { -gameState.angle, gameState.angle };
+	}
+	if (Play::KeyDown(0x44)) // D
+	{
+		player.velocity = { gameState.speed, 0 };
+		if (Play::KeyDown(0x57)) // W
+			player.velocity = { gameState.angle, -gameState.angle };
+		if (Play::KeyDown(0x53)) // S
+			player.velocity = { gameState.angle, gameState.angle };
+	}
+
+	// FIRE WEAPON
+	if (Play::KeyPressed(VK_LBUTTON)) // Mouse Button
+	{
+		int p = Play::CreateGameObject(projectile, player.pos, 30, "bullet");
+		//Play::GetGameObject(p).velocity = Vector2D( 10, 10 );
+		GameObject& nya = Play::GetGameObject(p);
+		nya.animSpeed = 0.1f;
+
+		// Find x and y of mouse relative to position
+		Point2D mousePos = Play::GetMousePos();
+		int x = floor(((mousePos.x + camera.GetXOffset()) - player.pos.x));
+		int y = floor(((mousePos.y + camera.GetYOffset()) - player.pos.y));
+		std::cout << x << std::endl;
+		std::cout << y << std::endl;
+
+		int length = sqrt(x * x + y * y) / 10;
+		nya.velocity = Vector2D(x / length, y / length);
+	}
+
+	for (auto c : level.getCollisionObjects()) {
+		if (c.checkColliding(player.pos.x, player.pos.y, 32)) {
+			player.pos = player.oldPos;
+		}
+	}
+	
+	// Player bounds checking
+	// Issue -- with camera implementation, it may not look like it is leaving display area...
+	//if (Play::IsLeavingDisplayArea(player))
+	//	if ((player.pos.y > DISPLAY_HEIGHT && player.velocity.y > 0)
+	//		|| (player.velocity.y < 0 && player.pos.y < 0))
+	//		player.velocity.y = 0;
+	//if ((player.pos.x > DISPLAY_WIDTH && player.velocity.x > 0)
+	//	|| (player.velocity.x < 0 && player.pos.x < 0))
+	//	player.velocity.x = 0;
+
+	// Bounding player
+	//if (player.pos.x > )
+
+	player.pos = Point2D(floor(player.pos.x), floor(player.pos.y));
+}
 
 void UpdateGameObjects()
 {
@@ -362,24 +227,14 @@ void UpdateGameObjects()
 	// Update projectiles
 	UpdateProjectiles();
 
-  	// for debug
-	for (auto c : level.getCollisionObjects()) {
-		PlayGraphics::Instance().DrawRect(c.getTopleft() - camera.GetOffset(), c.getBottomRight() - camera.GetOffset(), {255, 0, 0}, false);
-	}
-  
-  // Update player and shadow
-	GameObject& player = Play::GetGameObject(playerid);
-    GameObject& shadowGO = Play::GetGameObjectByType(shadow);
-	shadowGO.pos.x = player.pos.x - 30;
-	shadowGO.pos.y = player.pos.y + 50;
-	DrawOffset(&shadowGO);
-
+	GameObject& player = Play::GetGameObjectByType(angel);
 
 	// for debug
 	for (auto c : level.getCollisionObjects()) {
 		PlayGraphics::Instance().DrawRect(c.getTopleft() - camera.GetOffset(), c.getBottomRight() - camera.GetOffset(), {255, 0, 0}, false);
 	}
 
+	DrawOffset(&player);
 
 }
 
@@ -403,9 +258,10 @@ void UpdateProjectiles()
 
 }
 
+
 void UpdateCamera()
 {
-	GameObject& player = Play::GetGameObject(playerid);
+	GameObject& player = Play::GetGameObjectByType(angel);
 
 	// Camera bounding for level
 	if (player.pos.x > 3 / 2 * wBound) // R Bound
