@@ -37,7 +37,6 @@ enum GameObjectType
 	projectile,
 	enemy,
 	background,
-	shadow,
 };
 
 void HandlePlayerControls();
@@ -68,7 +67,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	Play::CentreAllSpriteOrigins();
 
 	// Set default game objects
-	Play::CreateGameObject(angel, { DISPLAY_WIDTH/2,DISPLAY_HEIGHT/2 }, 100, "angel");
+	Play::CreateGameObject(angel, { DISPLAY_WIDTH/2+600,DISPLAY_HEIGHT/2+200 }, 100, "angel");
 
 	level = Level::Level("Data\\Levels\\", "island", "Data\\Levels\\test_map.xml");
 
@@ -88,9 +87,6 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	//std::ifstream afile = std::ifstream("config.txt");
 	//std::getline(afile, message);
 	//afile.close();
-
-	Play::CreateGameObject(shadow, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 } ,  0, "generic_shadow_one");
-
 	
 }
 
@@ -140,100 +136,45 @@ int MainGameExit( void )
 	return PLAY_OK;
 }
 
-//what are the directions a gameobject can chose to move in
-enum Direction
-{
-	DIRECTION_NORTH,
-	DIRECTION_NORTH_EAST,
-	DIRECTION_EAST,
-	DIRECTION_SOUTH_EAST,
-	DIRECTION_SOUTH,
-	DIRECTION_SOUTH_WEST,
-	DIRECTION_WEST,
-	DIRECTION_NORTH_WEST,
-	IDLE,
-};
-
-
-
 void HandlePlayerControls()
 {
 	GameObject& player = Play::GetGameObjectByType(angel);
 
-	Direction direction = IDLE;
-
-	if (Play::KeyDown(0x57)) { // W
-		direction = DIRECTION_NORTH;
-	}
-	if (Play::KeyDown(0x44)) { // D
-		direction = DIRECTION_EAST;
-	}
-	if (Play::KeyDown(0x53)) { // S
-		direction = DIRECTION_SOUTH;
-	}
-
-	if (Play::KeyDown(0x41)) { // A
-		direction = DIRECTION_WEST;
-	}
-	if (Play::KeyDown(0x57) && Play::KeyDown(0x44)) { // W & D
-		direction = DIRECTION_NORTH_EAST;
-	}
-	if (Play::KeyDown(0x53) && Play::KeyDown(0x44)) { // S & D
-		direction = DIRECTION_SOUTH_EAST;
-	}
-	if (Play::KeyDown(0x53) && Play::KeyDown(0x41)) // A & S
+	player.velocity = { 0, 0 };
+	if (Play::KeyDown(0x57)) // W
 	{
-		direction = DIRECTION_SOUTH_WEST;
-	}
-	if (Play::KeyDown(0x57) && Play::KeyDown(0x41)) // W & A
-	{	
-		direction = DIRECTION_NORTH_WEST;
-	}
-
-
-
-	switch (direction) {
-	case IDLE:
-		Play::SetSprite(player, "angel_walk_north", 0.0f);
-		player.velocity = { 0, 0 };
-		break;
-	
-	case DIRECTION_NORTH:
-		Play::SetSprite(player, "angel_walk_north", 0.07f);
 		player.velocity = { 0, -gameState.speed };
-		break;
-	case DIRECTION_NORTH_EAST:
-		Play::SetSprite(player, "angel_walk_northeast", 0.07f);
-		player.velocity = { gameState.angle, -gameState.angle };
-		break;
-	case DIRECTION_EAST:
-		Play::SetSprite(player, "angel_walk_east", 0.07f);
-		player.velocity = { gameState.speed, 0 };
-		break;
-	case DIRECTION_SOUTH_EAST:
-		Play::SetSprite(player, "angel_walk_southeast", 0.07f);
-		player.velocity = { gameState.angle, gameState.angle };
-		break;
-	case DIRECTION_SOUTH:
-		Play::SetSprite(player, "angel_walk_south", 0.07f);
-		player.velocity = { 0, gameState.speed };
-		break;
-	case DIRECTION_SOUTH_WEST:
-		Play::SetSprite(player, "angel_walk_southwest", 0.07f);
-		player.velocity = { -gameState.angle, gameState.angle };
-		break;
-	case DIRECTION_WEST:
-		Play::SetSprite(player, "angel_walk_west", 0.07f);
-		player.velocity = { -gameState.angle, 0 };
-		break;
-	case DIRECTION_NORTH_WEST:
-		Play::SetSprite(player, "angel_walk_northwest", 0.07f);
-		player.velocity = { -gameState.angle, -gameState.angle };
-		break;
+		if (Play::KeyDown(0x41)) // A
+			player.velocity = { -gameState.angle, -gameState.angle };
+		if (Play::KeyDown(0x44)) // D
+			player.velocity = { gameState.angle, -gameState.angle };
 	}
 
+	if (Play::KeyDown(0x53)) // S
+	{
+		player.velocity = { 0, gameState.speed };
+		if (Play::KeyDown(0x41)) // A
+			player.velocity = { -gameState.angle, gameState.angle };
+		if (Play::KeyDown(0x44)) // D
+			player.velocity = { gameState.angle, gameState.angle };
+	}
 
-
+	if (Play::KeyDown(0x41)) // A
+	{
+		player.velocity = { -gameState.speed, 0 };
+		if (Play::KeyDown(0x57)) // W
+			player.velocity = { -gameState.angle, -gameState.angle };
+		if (Play::KeyDown(0x53)) // S
+			player.velocity = { -gameState.angle, gameState.angle };
+	}
+	if (Play::KeyDown(0x44)) // D
+	{
+		player.velocity = { gameState.speed, 0 };
+		if (Play::KeyDown(0x57)) // W
+			player.velocity = { gameState.angle, -gameState.angle };
+		if (Play::KeyDown(0x53)) // S
+			player.velocity = { gameState.angle, gameState.angle };
+	}
 
 	// FIRE WEAPON
 	if (Play::KeyPressed(VK_LBUTTON)) // Mouse Button
@@ -254,6 +195,12 @@ void HandlePlayerControls()
 		nya.velocity = Vector2D(x / length, y / length);
 	}
 
+	for (auto c : level.getCollisionObjects()) {
+		if (c.checkColliding(player.pos.x, player.pos.y, 32)) {
+			player.pos = player.oldPos;
+		}
+	}
+	
 	// Player bounds checking
 	// Issue -- with camera implementation, it may not look like it is leaving display area...
 	//if (Play::IsLeavingDisplayArea(player))
@@ -272,7 +219,6 @@ void HandlePlayerControls()
 
 void UpdateGameObjects()
 {
-  // Update camera
 	UpdateCamera();
 
 	// BACKGROUND MUST BE UPDATED FIRST
@@ -280,14 +226,16 @@ void UpdateGameObjects()
 
 	// Update projectiles
 	UpdateProjectiles();
-  
-  // Update player and shadow
+
 	GameObject& player = Play::GetGameObjectByType(angel);
-  GameObject& shadowGO = Play::GetGameObjectByType(shadow);
-	shadowGO.pos.x = player.pos.x - 30;
-	shadowGO.pos.y = player.pos.y + 50;
-	DrawOffset(&shadowGO);
+
+	// for debug
+	for (auto c : level.getCollisionObjects()) {
+		PlayGraphics::Instance().DrawRect(c.getTopleft() - camera.GetOffset(), c.getBottomRight() - camera.GetOffset(), {255, 0, 0}, false);
+	}
+
 	DrawOffset(&player);
+
 }
 
 void UpdateProjectiles()
@@ -307,7 +255,6 @@ void UpdateProjectiles()
 
 		DrawOffset(&p);
 	}
-
 
 }
 
