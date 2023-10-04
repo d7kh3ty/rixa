@@ -129,7 +129,11 @@ public:
 	void UpdateTools()
 	{
 		// We can use the update projectiles to handle this
-		GameObject& player = Play::GetGameObjectByType(angel);
+		//aGameObject& player = Play::GetGameObjectByType(angel);
+		auto players = Play::CollectGameObjectIDsByType(angel);
+		std::cout << "debug";
+		GameObject& player = Play::GetGameObject(players[0]);
+
 		std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
 
 		for (int pid : projectiles) {
@@ -271,7 +275,11 @@ enum Direction
 
 void HandlePlayerControls()
 {
-	GameObject& player = Play::GetGameObjectByType(angel);
+	//GameObject& player = Play::GetGameObjectByType(angel);
+	auto players = Play::CollectGameObjectIDsByType(angel);
+	std::cout << "debug";
+	GameObject& player = Play::GetGameObject(players[0]);
+
 
 	Direction direction = IDLE;
 
@@ -395,7 +403,12 @@ void UpdateGameObjects()
 	UpdateProjectiles();
   
   // Update player and shadow
-	GameObject& player = Play::GetGameObjectByType(angel);
+	//GameObject& player = Play::GetGameObjectByType(angel);
+
+	auto players = Play::CollectGameObjectIDsByType(angel);
+	std::cout << "debug";
+	GameObject& player = Play::GetGameObject(players[0]);
+
     GameObject& shadowGO = Play::GetGameObjectByType(shadow);
 	shadowGO.pos.x = player.pos.x - 30;
 	shadowGO.pos.y = player.pos.y + 50;
@@ -426,7 +439,11 @@ void UpdateProjectiles()
 
 void UpdateCamera()
 {
-	GameObject& player = Play::GetGameObjectByType(angel);
+	//GameObject& player = Play::GetGameObjectByType(angel);
+	auto players = Play::CollectGameObjectIDsByType(angel);
+	std::cout << "debug";
+	GameObject& player = Play::GetGameObject(players[0]);
+
 
 	// Camera bounding for level
 	if (player.pos.x > 3 / 2 * wBound) // R Bound
