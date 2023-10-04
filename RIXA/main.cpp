@@ -3,7 +3,6 @@
 #include "Play.h"
 #include "Camera.h"
 #include "Level.h"
-#include "Collision.h"
 
 int DISPLAY_WIDTH = 1280;
 int DISPLAY_HEIGHT = 800;
@@ -18,8 +17,6 @@ struct GameState
 	// Player attributes
 	int speed = 10;
 	float angle; // Angle is the speed of bidirectional movement
-
-	vector<CollisionBox> collisionObjects;
 };
 
 enum GameStateType
@@ -70,7 +67,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	Play::CentreAllSpriteOrigins();
 
 	// Set default game objects
-	Play::CreateGameObject(angel, { DISPLAY_WIDTH/2,DISPLAY_HEIGHT/2-200 }, 100, "angel");
+	Play::CreateGameObject(angel, { DISPLAY_WIDTH/2+600,DISPLAY_HEIGHT/2+200 }, 100, "angel");
 
 	level = Level::Level("Data\\Levels\\", "island", "Data\\Levels\\test_map.xml");
 
@@ -78,8 +75,6 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 
 	//wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
 	//hBound = 7 / 4 * Play::GetSpriteHeight("MarsBG");
-
-	gameState.collisionObjects.push_back(CollisionBox::CollisionBox({ 400, 400 }, { 600, 600 }));
 
 	wBound = level.getWidth();
 	hBound = level.getHeight();
@@ -200,7 +195,7 @@ void HandlePlayerControls()
 		nya.velocity = Vector2D(x / length, y / length);
 	}
 
-	for (auto c : gameState.collisionObjects) {
+	for (auto c : level.getCollisionObjects()) {
 		if (c.checkColliding(player.pos.x, player.pos.y, 32)) {
 			player.pos = player.oldPos;
 		}
@@ -235,7 +230,7 @@ void UpdateGameObjects()
 	GameObject& player = Play::GetGameObjectByType(angel);
 
 	// for debug
-	for (auto c : gameState.collisionObjects) {
+	for (auto c : level.getCollisionObjects()) {
 		PlayGraphics::Instance().DrawRect(c.getTopleft() - camera.GetOffset(), c.getBottomRight() - camera.GetOffset(), {255, 0, 0}, false);
 	}
 

@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "Play.h"
+#include "Collision.h"
 
 using std::string, std::vector;
 struct Chunk {
@@ -17,6 +18,9 @@ public:
 	void display(float x, float y);
 	int getWidth();
 	int getHeight();
+	void addCollisionObject(CollisionBox box);
+	vector<CollisionBox> getCollisionObjects();
+
 
 private:
 	int tileset;
@@ -28,5 +32,7 @@ private:
 	int py = 24;
 	// required to sync frames with file format
 	int frame = 71;
+
+	vector<CollisionBox> collisionObjects;
 };
 

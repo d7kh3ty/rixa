@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include "Level.h"
+#include "Collision.h"
 
 using std::stringstream;
 
@@ -32,7 +33,6 @@ Level::Level(string path, string tileset_s, string level) {
 	levels.erase(0, levels.find("width=\"") + 7);
 	width = stoi(levels.substr(0, levels.find("\""))) * px;
 	levels.erase(0, levels.find("height=\"") + 8);
-	std::cout << "levels";
 	height = stoi(levels.substr(0, levels.find("\""))) * px;
 
 	bool stop = false;
@@ -79,7 +79,6 @@ Level::Level(string path, string tileset_s, string level) {
 				string substr;
 				getline(s_stream, substr, ',');
 				if (substr != "") {
-					std::cout << substr;
 					vline.push_back(stoi(substr));
 				}
 			}
@@ -89,6 +88,54 @@ Level::Level(string path, string tileset_s, string level) {
 	}
 	
 	// get collision layer
+
+	size_t objectgroup = levels.find("objectgroup");
+	levels.erase(0, objectgroup+11);
+
+
+	size_t namep = levels.find("name");
+	levels.erase(0, namep+6);
+	string name = levels.substr(0, levels.find("\""));
+	
+	stop = false;
+	// get chunks
+	while (!stop)
+	{
+
+		size_t object = levels.find("object");
+		levels.erase(0, object+6);
+		//string name = levels.substr(0, levels.find("\""));
+
+		size_t x = levels.find("x=\"") + 3;
+		levels.erase(0, x);
+		int xi = stoi(levels.substr(0, levels.find("\"")));
+
+		size_t y = levels.find("y=\"") + 3;
+		levels.erase(0, y);
+		int yi = stoi(levels.substr(0, levels.find("\"")));
+
+		size_t width = levels.find("width=\"") + 7;
+		levels.erase(0, width);
+		int widthi = stoi(levels.substr(0, levels.find("\"")));
+
+		size_t height = levels.find("height=\"") + 8;
+		levels.erase(0, height);
+		int heighti = stoi(levels.substr(0, levels.find("\"")));
+		levels.erase(0, levels.find("\""));
+
+		collisionObjects.push_back(CollisionBox({ xi, yi }, { xi + widthi, yi + heighti }));
+
+		// disgusting
+		if (levels.find("</objectgroup>") <= 5) {
+			stop = true;
+			break;
+		}
+		
+	}
+
+
+
+
 }
 
 // display graphics directly to using undocumented PlayBuffer functions
@@ -114,4 +161,11 @@ int Level::getWidth() {
 
 int Level::getHeight() {
 	return height;
+}
+
+void Level::addCollisionObject(CollisionBox box) {
+	collisionObjects.push_back(box);
+}
+vector<CollisionBox> Level::getCollisionObjects() {
+	return collisionObjects;
 }
