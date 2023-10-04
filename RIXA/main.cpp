@@ -92,7 +92,7 @@ public:
 		// Set sprite, radius and speeds depending on the enemy type given
 		if(ENEMY_TYPE == TYPE_ENEMY1)
 		{
-			id = Play::CreateGameObject(ENEMY_TYPE, pos, 10, "coins");
+			id = Play::CreateGameObject(enemy, pos, 10, "coin");
 			Play::GetGameObject(id).animSpeed = 1;
 		}
 		else
@@ -109,6 +109,8 @@ public:
 
 		GameObject& enemy = Play::GetGameObject(id);
 		//Play::SetSprite(enemy, "coins_2", 0.25f); //
+
+
 
 		// Randomly shoot
 		if (Play::RandomRoll(100) == 100) {
@@ -153,7 +155,7 @@ public:
 	}
 
 private:
-	GameObjectType type;
+	EnemyType type;
 	int id;
 };
 
