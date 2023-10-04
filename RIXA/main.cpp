@@ -90,7 +90,7 @@ public:
 		// Set sprite, radius and speeds depending on the enemy type given
 		if(ENEMY_TYPE == TYPE_ENEMY1)
 		{
-			id = Play::CreateGameObject(ENEMY_TYPE, pos, 10, "coins");
+			id = Play::CreateGameObject(enemy, pos, 10, "coins");
 			Play::GetGameObject(id).animSpeed = 1;
 		}
 		else
@@ -129,10 +129,7 @@ public:
 	void UpdateTools()
 	{
 		// We can use the update projectiles to handle this
-		//aGameObject& player = Play::GetGameObjectByType(angel);
-		auto players = Play::CollectGameObjectIDsByType(angel);
-		std::cout << "debug";
-		GameObject& player = Play::GetGameObject(players[0]);
+		GameObject& player = Play::GetGameObjectByType(angel);
 
 		std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
 
@@ -275,10 +272,7 @@ enum Direction
 
 void HandlePlayerControls()
 {
-	//GameObject& player = Play::GetGameObjectByType(angel);
-	auto players = Play::CollectGameObjectIDsByType(angel);
-	std::cout << "debug";
-	GameObject& player = Play::GetGameObject(players[0]);
+	GameObject& player = Play::GetGameObjectByType(angel);
 
 
 	Direction direction = IDLE;
@@ -403,12 +397,7 @@ void UpdateGameObjects()
 	UpdateProjectiles();
   
   // Update player and shadow
-	//GameObject& player = Play::GetGameObjectByType(angel);
-
-	auto players = Play::CollectGameObjectIDsByType(angel);
-	std::cout << "debug";
-	GameObject& player = Play::GetGameObject(players[0]);
-
+	GameObject& player = Play::GetGameObjectByType(angel);
     GameObject& shadowGO = Play::GetGameObjectByType(shadow);
 	shadowGO.pos.x = player.pos.x - 30;
 	shadowGO.pos.y = player.pos.y + 50;
@@ -439,10 +428,7 @@ void UpdateProjectiles()
 
 void UpdateCamera()
 {
-	//GameObject& player = Play::GetGameObjectByType(angel);
-	auto players = Play::CollectGameObjectIDsByType(angel);
-	std::cout << "debug";
-	GameObject& player = Play::GetGameObject(players[0]);
+	GameObject& player = Play::GetGameObjectByType(angel);
 
 
 	// Camera bounding for level
