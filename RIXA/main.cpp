@@ -35,10 +35,30 @@ enum GameObjectType
 	TYPE_NULL = -1,
 	angel,
 	projectile,
+	e_projectile,
 	enemy,
 	background,
 	shadow,
 };
+
+enum EnemyType
+{
+	// DVD 
+	TYPE_ENEMY1,
+	TYPE_ENEMY2,
+	TYPE_ENEMY3,
+	TYPE_ENEMY4,
+};
+// Player states
+enum AngelState
+{
+	STATE_APPEAR = 0,
+	STATE_HALT,
+	STATE_PLAY,
+	STATE_DEAD,
+};
+
+AngelState angelState = STATE_APPEAR;
 
 void HandlePlayerControls();
 void UpdateCamera();
@@ -53,12 +73,92 @@ GameState gameState;
 
 GameStateType state;
 
-Camera camera(0,0,DISPLAY_WIDTH, DISPLAY_HEIGHT);
+Camera camera(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
 float wBound;
 float hBound;
 
 Level level;
+
+
+// DVD ENEMY CLASS
+class Enemy {
+public:
+	// constructors
+	Enemy() {}; 
+	Enemy(EnemyType ENEMY_TYPE, Point2f pos, Vector2D vel) {
+		// Set sprite, radius and speeds depending on the enemy type given
+		if(ENEMY_TYPE == TYPE_ENEMY1)
+		{
+			id = Play::CreateGameObject(ENEMY_TYPE, pos, 10, "coins");
+			Play::GetGameObject(id).animSpeed = 1;
+		}
+		else
+		{
+			// If enemy type does not match
+			return;
+		}
+
+		Play::GetGameObject(id).velocity = vel;
+	}
+
+	// Updating Movements
+	void UpdateEnemy() {
+
+		GameObject& enemy = Play::GetGameObject(id);
+		//Play::SetSprite(enemy, "coins_2", 0.25f); //
+
+		// Randomly shoot
+		if (Play::RandomRoll(100) == 100) {
+			int pid = Play::CreateGameObject(e_projectile, { enemy.pos.x, enemy.pos.y }, 90, "bullet");
+			GameObject& bullet = Play::GetGameObject(pid);
+			bullet.velocity = Point2f(Play::RandomRollRange(-1, 1) * 4, 4);
+			bullet.rotSpeed = 1;
+			Play::PlayAudio("tool");
+		}
+
+		// Destroy out of bounds game objects
+		if (OutOfBounds(&enemy)) {
+			Play::DestroyGameObject(id);
+		}
+
+
+		DrawOffset(&enemy);
+	}
+
+	void UpdateTools()
+	{
+		// We can use the update projectiles to handle this
+		GameObject& player = Play::GetGameObjectByType(angel);
+		std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
+
+		for (int pid : projectiles) {
+			GameObject& bullet = Play::GetGameObject(pid);
+			if (angelState != STATE_DEAD && Play::IsColliding(bullet, player)) {
+				angelState = STATE_DEAD;
+				Play::PlayAudio("die");
+			}
+
+			// if want more bullet functions?
+
+			DrawOffset(&bullet);
+
+			if (OutOfBounds(&bullet))
+			{
+				Play::DestroyGameObject(pid);
+			}
+		}
+	}
+
+private:
+	GameObjectType type;
+	int id;
+};
+
+// Enemies
+Enemy v_cershinsky;
+Enemy j_bidet;
+Enemy ursula_L;
 
 void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 {
@@ -91,7 +191,12 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 
 	Play::CreateGameObject(shadow, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 } ,  0, "generic_shadow_one");
 
-	
+	// DVD: enemies 
+	v_cershinsky = Enemy(TYPE_ENEMY1, {500, 500}, {10,10});
+
+	j_bidet = Enemy(TYPE_ENEMY1, { 600, 500 }, { -10,10 });
+
+	ursula_L = Enemy(TYPE_ENEMY1, { 500, 600 }, { 10,-10 });
 }
 
 // Called by PlayBuffer every frame (60 times a second!)
@@ -106,7 +211,7 @@ bool MainGameUpdate( float elapsedTime )
 		//Play::DrawFontText("132px", "RIXA",
 		//	{ DISPLAY_WIDTH / 2, 100 }, Play::CENTRE);
 		Play::DrawSprite("MarsBG", { 0,0 }, 0);
-		Play::DrawSprite("title", { DISPLAY_WIDTH / 2, 100 }, 0);
+		Play::DrawSprite("title", { DISPLAY_WIDTH / 2, 300 }, 0);
 
 		Play::DrawFontText("64px", "PRESS SPACE TO START",
 			{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 300 }, Play::CENTRE);
@@ -121,6 +226,16 @@ bool MainGameUpdate( float elapsedTime )
 		HandlePlayerControls();
 		level.display(-camera.GetXOffset(), -camera.GetYOffset());
 		UpdateGameObjects();
+		// DVD
+		//"Any similarity with fictitious events or characters was purely coincidental."
+		v_cershinsky.UpdateEnemy();
+		v_cershinsky.UpdateTools();
+
+		j_bidet.UpdateEnemy();
+		j_bidet.UpdateTools();
+
+		ursula_L.UpdateEnemy();
+		ursula_L.UpdateTools();
 	}
 
 	//draw everything
@@ -153,8 +268,6 @@ enum Direction
 	DIRECTION_NORTH_WEST,
 	IDLE,
 };
-
-
 
 void HandlePlayerControls()
 {
@@ -283,7 +396,7 @@ void UpdateGameObjects()
   
   // Update player and shadow
 	GameObject& player = Play::GetGameObjectByType(angel);
-  GameObject& shadowGO = Play::GetGameObjectByType(shadow);
+    GameObject& shadowGO = Play::GetGameObjectByType(shadow);
 	shadowGO.pos.x = player.pos.x - 30;
 	shadowGO.pos.y = player.pos.y + 50;
 	DrawOffset(&shadowGO);
@@ -310,7 +423,6 @@ void UpdateProjectiles()
 
 
 }
-
 
 void UpdateCamera()
 {
