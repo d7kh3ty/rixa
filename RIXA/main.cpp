@@ -56,9 +56,6 @@ void DrawOffset(GameObject* go);
 void DrawBackground();
 bool OutOfBounds(GameObject* go);
 
-GameState gameState;
-
-GameStateType state;
 
 Camera camera(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
@@ -96,8 +93,6 @@ public:
 
 		GameObject& enemy = Play::GetGameObject(id);
 		//Play::SetSprite(enemy, "coins_2", 0.25f); //
-
-
 
 		// Randomly shoot
 		if (Play::RandomRoll(100) == 100) {
@@ -154,7 +149,9 @@ struct GameState
 	vector<Enemy> enemies;
 };
 
+GameStateType state;
 
+GameState gameState;
 
 void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 {
@@ -225,14 +222,14 @@ bool MainGameUpdate( float elapsedTime )
 		UpdateGameObjects();
 		// DVD
 		//"Any similarity with fictitious events or characters was purely coincidental."
-		v_cershinsky.UpdateEnemy();
-		v_cershinsky.UpdateEnemyProjectiles();
+		//v_cershinsky.UpdateEnemy();
+		//v_cershinsky.UpdateEnemyProjectiles();
 
-		j_bidet.UpdateEnemy();
-		j_bidet.UpdateEnemyProjectiles();
+		//j_bidet.UpdateEnemy();
+		//j_bidet.UpdateEnemyProjectiles();
 
-		ursula_L.UpdateEnemy();
-		ursula_L.UpdateEnemyProjectiles();
+		//ursula_L.UpdateEnemy();
+		//ursula_L.UpdateEnemyProjectiles();
 		for (auto enemy : gameState.enemies)
 		{
 			enemy.Update();
