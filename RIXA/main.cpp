@@ -17,6 +17,8 @@ enum GameStateType
 	gameLose,
 };
 
+GameStateType state;
+
 //what are the types of game objects
 enum GameObjectType
 {
@@ -86,6 +88,11 @@ public:
 		}
 
 		Play::GetGameObject(id).velocity = vel;
+
+		// for flank position seeking
+		if (Play::RandomRoll(2) == 2) {
+			leftright = 1;
+		}
 	}
 
 	// update everything 
@@ -93,18 +100,45 @@ public:
 
 		GameObject& player = Play::GetGameObject(playerid);
 		GameObject& enemy = Play::GetGameObject(id);
+
 		//Play::SetSprite(enemy, "coins_2", 0.25f); //
-		int x = floor(((player.pos.x + camera.GetXOffset()) - enemy.pos.x));
-		int y = floor(((player.pos.y + camera.GetYOffset()) - enemy.pos.y));
+		float x = (player.pos.x) - enemy.pos.x;
+		float y = (player.pos.y) - enemy.pos.y;
 		float length = sqrt(x * x + y * y);
 
-		// Shoot in direction of player
-		if (Play::RandomRoll(100) > 99) {
-			int pid = Play::CreateGameObject(e_projectile, { enemy.pos.x, enemy.pos.y }, 90, "bullet");
-			GameObject& bullet = Play::GetGameObject(pid);
-			Play::PlayAudio("tool");
-			float speed_check = length / bulletSpeed;
-			bullet.velocity = Vector2D(x / speed_check, y / speed_check);
+		if (playerDetected) {			
+
+			// Shoot in direction of player
+			if (attackCooldown == 0) {
+				int pid = Play::CreateGameObject(e_projectile, { enemy.pos.x, enemy.pos.y }, 90, "bullet");
+				GameObject& bullet = Play::GetGameObject(pid);
+				Play::PlayAudio("tool");
+				float speed_check = length / bulletSpeed;
+				bullet.velocity = Vector2D(x / speed_check, y / speed_check);
+				attackCooldown = attackSpeed; 
+			} else {
+				attackCooldown--;
+			}
+
+			// Move in direction of player to left or right
+			if (leftright) {
+				x = floor(((player.pos.x) - enemy.pos.x - 333));
+			}
+			else {
+				x = floor(((player.pos.x) - enemy.pos.x + 333));
+			}
+			length = sqrt(x * x + y * y);
+			float speed_check = length / speed;
+			if (length > 10) {
+				enemy.velocity = Vector2D(x / speed_check, y / speed_check);
+			}
+			else {
+				enemy.velocity = Vector2D(0, 0);
+			}
+
+
+		} else if (length < detectionRange) {
+			playerDetected = true; 
 		}
 
 		DrawOffset(&enemy);
@@ -133,18 +167,20 @@ public:
 				Play::DestroyGameObject(pid);
 			}
 		}
-
-		if (length < detectionRange) {
-			playerDetected = true;
-		}
 	}
 
 private:
 	EnemyType type;
 	int id;
+	int speed = 6;
+	int attackSpeed = 77; // lower is faster
+	int attackCooldown = 0;
+
 	int bulletSpeed = 5;
-	int detectionRange = 10;
+	int detectionRange = 444;
 	bool playerDetected = false;
+
+	bool leftright = 0; // this is for random flanking
 };
 
 //what is the state of the game
@@ -159,8 +195,6 @@ struct GameState
 
 	vector<Enemy> enemies;
 };
-
-GameStateType state;
 
 GameState gameState;
 
@@ -196,11 +230,11 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	//Play::CreateGameObject(shadow, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 } ,  0, "generic_shadow_one");
 
 	// DVD: enemies 
-	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, {500, 500}, {10,10}));
+	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, {500, 500}, {0,0}));
 
-	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, { 600, 500 }, { -10,10 }));
+	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, { 600, 500 }, { 0,0 }));
 
-	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, { 500, 600 }, { 10,-10 }));
+	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, { 500, 600 }, { 0,0 }));
 
 }
 
@@ -244,11 +278,12 @@ bool MainGameUpdate( float elapsedTime )
 
 		//ursula_L.UpdateEnemy();
 		//ursula_L.UpdateEnemyProjectiles();
-		for (auto enemy : gameState.enemies)
+		for (auto i = 0; i != gameState.enemies.size(); i++)
 		{
-			enemy.update();
+			gameState.enemies[i].update();
 		}
 		DrawOffset(&player);
+
 	}
 
 	//draw everything
