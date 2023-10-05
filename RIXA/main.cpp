@@ -401,25 +401,25 @@ void UpdateCamera()
 	GameObject& player = Play::GetGameObject(playerid);
 
 	// Camera bounding for level
-	if (player.pos.x > 3 / 2 * wBound) // R Bound
+	if (player.pos.x + (DISPLAY_WIDTH / 2) >  wBound) // R Bound
 	{
-		camera.Follow(wBound, player.pos.y);
+		camera.Follow(wBound - DISPLAY_WIDTH / 2, player.pos.y);
 	}
-	else if (player.pos.x < -3 / 2 * wBound) // L Bound
+	else if (player.pos.x - DISPLAY_WIDTH / 2 < 0) // L Bound
 	{
-		camera.Follow(-wBound, player.pos.y);
+		camera.Follow(DISPLAY_WIDTH/2, player.pos.y);
 	}
-	else if (player.pos.y < -hBound) // Top of the level bound
+	else if (player.pos.y - DISPLAY_HEIGHT/2  < -hBound) // Top of the level bound
 	{
-		camera.Follow(player.pos.x, -hBound);
+		camera.Follow(player.pos.x, -hBound + DISPLAY_HEIGHT / 2 );
 	}
-	else if (player.pos.x < -3 / 2 * wBound && player.pos.y < -hBound)
+	else if (player.pos.x - DISPLAY_WIDTH / 2 < 0 && player.pos.y - DISPLAY_HEIGHT / 2 < -hBound) // Both height and width bounds reached
 	{
-		camera.Follow(-wBound, -hBound);
+		camera.Follow(DISPLAY_WIDTH/2, -hBound + DISPLAY_HEIGHT / 2 );
 	}
-	else if (player.pos.x < 3 / 2 * wBound && player.pos.y < -hBound)
+	else if (player.pos.x + (DISPLAY_WIDTH / 2) > wBound && player.pos.y - DISPLAY_HEIGHT / 2  < -hBound)
 	{
-		camera.Follow(wBound, -hBound);
+		camera.Follow(wBound, -hBound + DISPLAY_HEIGHT / 2 );
 	}
 	else // Otherwise
 	{
@@ -473,8 +473,8 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	//wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
 	//hBound = 7 / 4 * Play::GetSpriteHeight("MarsBG");
 
-	wBound = level.getWidth();
-	hBound = level.getHeight();
+	wBound = 30 * 32;//level.getWidth();
+	hBound = 128 * 32 -100;//level.getHeight();
 
 	//approximate directional movement
 	gameState.angle = gameState.speed * 0.7;
