@@ -5,9 +5,9 @@
 #include "Level.h"
 #include <cmath>
 
-int DISPLAY_WIDTH = 800;
-int DISPLAY_HEIGHT = 800;
-int DISPLAY_SCALE = 1;
+int DISPLAY_WIDTH = 400;
+int DISPLAY_HEIGHT = 400;
+int DISPLAY_SCALE = 3;
 
 // Game states
 enum GameStateType
@@ -135,14 +135,14 @@ public:
 
 		if (playerDetected) {
 
-			//// Collisions in the environment checking
-			//for (auto c : level.getCollisionObjects()) {
-			//	if (c.checkColliding(enemy.pos.x, enemy.pos.y, 64)) {
-			//		//enemy.pos = enemy.oldPos;
-			//		//player.velocity = player.;
-			//		enemy.velocity = -enemy.velocity;
-			//	}
-			//}
+			// Collisions in the environment checking
+			for (auto c : level.getCollisionObjects()) {
+				if (c.checkColliding(enemy.pos.x, enemy.pos.y, 64)) {
+					//enemy.pos = enemy.oldPos;
+					//player.velocity = player.;
+					enemy.velocity = -enemy.velocity;
+				}
+			}
 
 			// Shoot in direction of player based on attack cooldown
 			if (attackCooldown == 0) { //Play::RandomRoll(120) == 1){
@@ -153,11 +153,11 @@ public:
 				bullet.velocity = Vector2D(x / speed_check, y / speed_check);
 				attackCooldown = attackSpeed;
 
-				float velx = Play::RandomRollRange(-10, 10);
-				float vely = Play::RandomRollRange(-10, 10);
+				float velx = Play::RandomRollRange(-1, 1);
+				float vely = Play::RandomRollRange(-1, 1);
 				float magnitude = sqrt(x * x + y * y);
 
-				enemy.velocity = { (velx * speed * 10) / magnitude, (vely * speed * 10) / magnitude };
+				enemy.velocity = { (velx * speed) / magnitude, (vely * speed) / magnitude };
 			} else {
 				attackCooldown--;
 			}
@@ -358,7 +358,7 @@ private:
 	int attackSpeed = 77; // lower is faster
 	int attackCooldown = 0;
 
-	int bulletSpeed = 5;
+	float bulletSpeed = 0.5;
 	int detectionRange = 444;
 	bool playerDetected = false;
 
@@ -706,7 +706,7 @@ bool MainGameUpdate( float elapsedTime )
 			//	Play::PresentDrawingBuffer();
 			//}
 			state = play;
-			Play::StartAudioLoop("Data\\Audio\\level_one_shorter.mp3");
+			//Play::StartAudioLoop("Data\\Audio\\level_one_shorter.mp3");
 		}
 	}
 	else if (state == play)
