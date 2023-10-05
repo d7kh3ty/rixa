@@ -71,6 +71,19 @@ Level level;
 
 int playerid;
 
+//what are the directions a gameobject can chose to move in
+enum Direction
+{
+	DIRECTION_NORTH,
+	DIRECTION_NORTH_EAST,
+	DIRECTION_EAST,
+	DIRECTION_SOUTH_EAST,
+	DIRECTION_SOUTH,
+	DIRECTION_SOUTH_WEST,
+	DIRECTION_WEST,
+	DIRECTION_NORTH_WEST,
+	IDLE,
+};
 
 // DVD ENEMY CLASS
 class Enemy {
@@ -81,8 +94,9 @@ public:
 		// Set sprite, radius and speeds depending on the enemy type given
 		if (ENEMY_TYPE == TYPE_ENEMY1)
 		{
-			id = Play::CreateGameObject(enemy, pos, 10, "cute_north");
-			Play::SetSprite(Play::GetGameObject(id), "cute_south", 0.5f);
+			type = TYPE_ENEMY1;
+			id = Play::CreateGameObject(enemy, pos, 10, "cute_south");
+			Play::SetSprite(Play::GetGameObject(id), "cute_south", 0.1f);
 			//Play::GetGameObject(id).animSpeed = 1;
 		}
 		else
@@ -109,7 +123,7 @@ public:
 		float y = (player.pos.y) - enemy.pos.y;
 		float length = sqrt(x * x + y * y);
 
-		if (playerDetected) {			
+		if (playerDetected) {
 
 			// Shoot in direction of player based on attack cooldown
 			if (attackCooldown == 0) { //Play::RandomRoll(120) == 1){
@@ -118,8 +132,9 @@ public:
 				Play::PlayAudio("tool");
 				float speed_check = length / bulletSpeed;
 				bullet.velocity = Vector2D(x / speed_check, y / speed_check);
-				attackCooldown = attackSpeed; 
-			} else {
+				attackCooldown = attackSpeed;
+			}
+			else {
 				attackCooldown--;
 			}
 
@@ -139,11 +154,137 @@ public:
 				enemy.velocity = Vector2D(0, 0);
 			}
 
+			if (x != 0) {
+				float m = y / x;
+				// facing right
+				if (x > 0) {
+					// facing down
+					if (y > 0) {
+						dir = DIRECTION_SOUTH_EAST;
+					}
+					// facing up
+					else {
+						dir = DIRECTION_NORTH_EAST;
+					}
+				}
+				// facing left
+				else {
+					// facing down
+					if (y > 0) {
+						dir = DIRECTION_SOUTH_WEST;
+					}
+					// facing up
+					else {
+						dir = DIRECTION_NORTH_WEST;
+					}
+				}
+			}
+			else {
+				dir = DIRECTION_SOUTH;	
+			}
+
 
 		}
 		else if (length < detectionRange) {
 			playerDetected = true; 
 		}
+
+		switch (type) {
+		case TYPE_ENEMY1:
+			switch (dir) {
+			case IDLE:
+				Play::SetSprite(enemy, "cute_south", 0.1f);
+				break;
+			case DIRECTION_NORTH:
+				Play::SetSprite(enemy, "cute_north", 0.1f);
+				break;
+			case DIRECTION_NORTH_EAST:
+				Play::SetSprite(enemy, "cute_northeast", 0.1f);
+				break;
+			case DIRECTION_EAST:
+				Play::SetSprite(enemy, "cute_east", 0.1f);
+				break;
+			case DIRECTION_SOUTH_EAST:
+				Play::SetSprite(enemy, "cute_southeast", 0.1f);
+				break;
+			case DIRECTION_SOUTH:
+				Play::SetSprite(enemy, "cute_south", 0.1f);
+				break;
+			case DIRECTION_SOUTH_WEST:
+				Play::SetSprite(enemy, "cute_southwest", 0.1f);
+				break;
+			case DIRECTION_WEST:
+				Play::SetSprite(enemy, "cute_west", 0.1f);
+				break;
+			case DIRECTION_NORTH_WEST:
+				Play::SetSprite(enemy, "cute_northwest", 0.1f);
+				break;
+			}
+			break;
+		case TYPE_ENEMY2:
+			switch (dir) {
+			case IDLE:
+				Play::SetSprite(enemy, "cute_south", 0.0f);
+				break;
+			case DIRECTION_NORTH:
+				Play::SetSprite(enemy, "cute_north", 0.07f);
+				break;
+			case DIRECTION_NORTH_EAST:
+				Play::SetSprite(enemy, "cute_northeast", 0.07f);
+				break;
+			case DIRECTION_EAST:
+				Play::SetSprite(enemy, "cute_east", 0.07f);
+				break;
+			case DIRECTION_SOUTH_EAST:
+				Play::SetSprite(enemy, "cute_southeast", 0.07f);
+				break;
+			case DIRECTION_SOUTH:
+				Play::SetSprite(enemy, "cute_south", 0.07f);
+				break;
+			case DIRECTION_SOUTH_WEST:
+				Play::SetSprite(enemy, "cute_southwest", 0.07f);
+				break;
+			case DIRECTION_WEST:
+				Play::SetSprite(enemy, "cute_west", 0.07f);
+				break;
+			case DIRECTION_NORTH_WEST:
+				Play::SetSprite(enemy, "cute_northwest", 0.07f);
+				break;
+			}
+			break;
+		case TYPE_ENEMY3:
+			switch (dir) {
+			case IDLE:
+				Play::SetSprite(enemy, "cute_south", 0.0f);
+				break;
+			case DIRECTION_NORTH:
+				Play::SetSprite(enemy, "cute_north", 0.07f);
+				break;
+			case DIRECTION_NORTH_EAST:
+				Play::SetSprite(enemy, "cute_northeast", 0.07f);
+				break;
+			case DIRECTION_EAST:
+				Play::SetSprite(enemy, "cute_east", 0.07f);
+				break;
+			case DIRECTION_SOUTH_EAST:
+				Play::SetSprite(enemy, "cute_southeast", 0.07f);
+				break;
+			case DIRECTION_SOUTH:
+				Play::SetSprite(enemy, "cute_south", 0.07f);
+				break;
+			case DIRECTION_SOUTH_WEST:
+				Play::SetSprite(enemy, "cute_southwest", 0.07f);
+				break;
+			case DIRECTION_WEST:
+				Play::SetSprite(enemy, "cute_west", 0.07f);
+				break;
+			case DIRECTION_NORTH_WEST:
+				Play::SetSprite(enemy, "cute_northwest", 0.07f);
+				break;
+			}
+			break;
+		}
+
 
 		DrawOffset(&enemy);
 
@@ -188,6 +329,8 @@ private:
 	bool playerDetected = false;
 
 	bool leftright = 0; // this is for random flanking
+
+	Direction dir = DIRECTION_SOUTH;
 };
 
 //what is the state of the game
@@ -204,21 +347,6 @@ struct GameState
 };
 
 GameState gameState;
-
-
-//what are the directions a gameobject can chose to move in
-enum Direction
-{
-	DIRECTION_NORTH,
-	DIRECTION_NORTH_EAST,
-	DIRECTION_EAST,
-	DIRECTION_SOUTH_EAST,
-	DIRECTION_SOUTH,
-	DIRECTION_SOUTH_WEST,
-	DIRECTION_WEST,
-	DIRECTION_NORTH_WEST,
-	IDLE,
-};
 
 void HandlePlayerControls()
 {
@@ -484,6 +612,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 
 	//Play::CreateGameObject(shadow, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 } ,  0, "generic_shadow_one");
 
+	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, {500, 600}, {0,0}));
 	for (auto e : level.getEnemyData()) {
 		if (e.type == 1)
 			gameState.enemies.push_back(Enemy(TYPE_ENEMY1, {e.x, e.y}, {0,0}));
