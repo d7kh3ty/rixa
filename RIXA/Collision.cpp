@@ -7,8 +7,8 @@ CollisionBox::CollisionBox(Point2f top_left, Point2f bottom_right) {
 
 bool CollisionBox::checkColliding(int x2, int y2, int radius) {
 
-	if ((x2+radius > top_left_.x && x2-radius < bottom_right_.x) &&
-	(y2+radius > top_left_.y && y2-radius < bottom_right_.x)) {
+	if ((x2+radius > top_left_.x && x2-radius < bottom_right_.x)
+	&& (y2+radius > top_left_.y && y2-radius < bottom_right_.y)) {
 		return true;
 	}
 	return false;
