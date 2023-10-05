@@ -328,11 +328,6 @@
   <object id="50" x="718.667" y="-1817.33"/>
   <object id="53" x="928" y="-1824"/>
  </objectgroup>
- <objectgroup id="5" name="enemy3">
-  <object id="32" x="478.667" y="-1237.33"/>
-  <object id="57" x="229" y="-1516"/>
-  <object id="58" x="732" y="-1527"/>
- </objectgroup>
  <objectgroup id="4" name="enemy2">
   <object id="13" x="239" y="-172"/>
   <object id="14" x="372" y="-826"/>
@@ -340,5 +335,10 @@
   <object id="43" x="192" y="-1696"/>
   <object id="44" x="512" y="-1696"/>
   <object id="47" x="822.667" y="-1686.67"/>
+ </objectgroup>
+ <objectgroup id="5" name="enemy3">
+  <object id="32" x="478.667" y="-1237.33"/>
+  <object id="57" x="229" y="-1516"/>
+  <object id="58" x="732" y="-1527"/>
  </objectgroup>
 </map>

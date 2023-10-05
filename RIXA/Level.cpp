@@ -99,85 +99,170 @@ Level::Level(string path, string tileset_s, string level) {
 	
 	/// FORGIVE ME, GODS OF EFFICIENCY
 	/// I KNOW THIS IS NOT THE BEST WAY TO DO THIS
-	/// BUT I DO NOT HAVE TIME TO IMPLEMENT THE BEST SOLUTION
+	/// BUT I DO NOT HAVE TIME TO THINK OF THE BEST SOLUTION
+	bool stop1 = false;
+	while (!stop1) {
+		if (name == "collision") {
+			stop = false;
+			// get chunks
+			while (!stop)
+			{
 
-	if (name == "collision") {
-		stop = false;
-		// get chunks
-		while (!stop)
-		{
+				std::cout << "dbg";
+				size_t object = levels.find("object");
+				levels.erase(0, object + 6);
+				//string name = levels.substr(0, levels.find("\""));
 
-			size_t object = levels.find("object");
-			levels.erase(0, object + 6);
-			//string name = levels.substr(0, levels.find("\""));
+				size_t x = levels.find("x=\"") + 3;
+				levels.erase(0, x);
+				int xi = stoi(levels.substr(0, levels.find("\"")));
 
-			size_t x = levels.find("x=\"") + 3;
-			levels.erase(0, x);
-			int xi = stoi(levels.substr(0, levels.find("\"")));
+				size_t y = levels.find("y=\"") + 3;
+				levels.erase(0, y);
+				int yi = stoi(levels.substr(0, levels.find("\"")));
 
-			size_t y = levels.find("y=\"") + 3;
-			levels.erase(0, y);
-			int yi = stoi(levels.substr(0, levels.find("\"")));
+				size_t width = levels.find("width=\"") + 7;
+				levels.erase(0, width);
+				int widthi = stoi(levels.substr(0, levels.find("\"")));
 
-			size_t width = levels.find("width=\"") + 7;
-			levels.erase(0, width);
-			size_t width = levels.find("width=\"") + 7;
-			levels.erase(0, width);
-			int widthi = stoi(levels.substr(0, levels.find("\"")));
+				size_t height = levels.find("height=\"") + 8;
+				levels.erase(0, height);
+				int heighti = stoi(levels.substr(0, levels.find("\"")));
+				levels.erase(0, levels.find("\""));
 
-			size_t height = levels.find("height=\"") + 8;
-			levels.erase(0, height);
-			int heighti = stoi(levels.substr(0, levels.find("\"")));
-			levels.erase(0, levels.find("\""));
+				collisionObjects.push_back(CollisionBox({ xi, yi }, { xi + widthi, yi + heighti }));
 
-			int widthi = stoi(levels.substr(0, levels.find("\"")));
-
-			size_t height = levels.find("height=\"") + 8;
-			levels.erase(0, height);
-			int heighti = stoi(levels.substr(0, levels.find("\"")));
-			levels.erase(0, levels.find("\""));
-
-			collisionObjects.push_back(CollisionBox({ xi, yi }, { xi + widthi, yi + heighti }));
-
-			// disgusting
-			if (levels.find("</objectgroup>") <= 5) {
-				stop = true;
-				break;
+				// disgusting
+				if (levels.find("</objectgroup>") <= 5) {
+					stop = true;
+					break;
+				}
 			}
 		}
-	}
+		std::cout << "dbg";
 
-	if (name == "enemy1") {
-		stop = false;
-		// get chunks
-		while (!stop)
-		{
-			size_t object = levels.find("object");
-			levels.erase(0, object + 6);
-			//string name = levels.substr(0, levels.find("\""));
+		objectgroup = levels.find("objectgroup");
+		levels.erase(0, objectgroup + 11);
 
-			size_t x = levels.find("x=\"") + 3;
-			levels.erase(0, x);
-			int xi = stoi(levels.substr(0, levels.find("\"")));
 
-			size_t y = levels.find("y=\"") + 3;
-			levels.erase(0, y);
-			int yi = stoi(levels.substr(0, levels.find("\"")));
+				levels.erase(0, levels.find("\""));
+		namep = levels.find("name");
+		levels.erase(0, namep + 6);
+		name = levels.substr(0, levels.find("\""));
 
-			//collisionObjects.push_back(CollisionBox({ xi, yi }, { xi + widthi, yi + heighti }));
+		std::cout << "dbg";
+		if (name == "enemy1") {
+			stop = false;
+			// get chunks
+			while (!stop)
+			{
+				size_t object = levels.find("object");
+				levels.erase(0, object + 6);
+				//string name = levels.substr(0, levels.find("\""));
 
-			// disgusting
-			if (levels.find("</objectgroup>") <= 5) {
-				stop = true;
-				break;
+				size_t x = levels.find("x=\"") + 3;
+				levels.erase(0, x);
+				int xi = floor(stof(levels.substr(0, levels.find("\""))));
+
+				size_t y = levels.find("y=\"") + 3;
+				levels.erase(0, y);
+				int yi = floor(stof(levels.substr(0, levels.find("\""))));
+				levels.erase(0, levels.find("\""));
+
+				//collisionObjects.push_back(CollisionBox({ xi, yi }, { xi + widthi, yi + heighti }));
+				enemies.push_back(EnemyData{ xi, yi, 1 });
+
+				// disgusting
+				if (levels.find("</objectgroup>") <= 5) {
+					stop = true;
+					break;
+				}
 			}
 		}
+
+		std::cout << "dbg";
+		objectgroup = levels.find("objectgroup");
+		levels.erase(0, objectgroup + 11);
+
+
+		namep = levels.find("name");
+		levels.erase(0, namep + 6);
+		name = levels.substr(0, levels.find("\""));
+
+		std::cout << "dbg";
+
+		if (name == "enemy2") {
+			stop = false;
+			// get chunks
+			while (!stop)
+			{
+				size_t object = levels.find("object");
+				levels.erase(0, object + 6);
+				//string name = levels.substr(0, levels.find("\""));
+
+				size_t x = levels.find("x=\"") + 3;
+				levels.erase(0, x);
+				int xi = floor(stof(levels.substr(0, levels.find("\""))));
+
+				size_t y = levels.find("y=\"") + 3;
+				levels.erase(0, y);
+				int yi = floor(stof(levels.substr(0, levels.find("\""))));
+				levels.erase(0, levels.find("\""));
+
+				//collisionObjects.push_back(CollisionBox({ xi, yi }, { xi + widthi, yi + heighti }));
+				enemies.push_back(EnemyData{ xi, yi, 2 });
+
+				// disgusting
+				if (levels.find("</objectgroup>") <= 5) {
+					stop = true;
+					break;
+				}
+			}
+		}
+
+		std::cout << "dbg";
+		objectgroup = levels.find("objectgroup");
+		levels.erase(0, objectgroup + 11);
+
+
+		namep = levels.find("name");
+		levels.erase(0, namep + 6);
+		name = levels.substr(0, levels.find("\""));
+
+		std::cout << "dbg";
+
+		if (name == "enemy3") {
+			stop = false;
+			// get chunks
+			while (!stop)
+			{
+				size_t object = levels.find("object");
+				levels.erase(0, object + 6);
+				//string name = levels.substr(0, levels.find("\""));
+
+				size_t x = levels.find("x=\"") + 3;
+				levels.erase(0, x);
+				int xi = floor(stof(levels.substr(0, levels.find("\""))));
+
+				size_t y = levels.find("y=\"") + 3;
+				levels.erase(0, y);
+				int yi = floor(stof(levels.substr(0, levels.find("\""))));
+				levels.erase(0, levels.find("\""));
+
+				//collisionObjects.push_back(CollisionBox({ xi, yi }, { xi + widthi, yi + heighti }));
+				enemies.push_back(EnemyData{ xi, yi, 3 });
+
+				// disgusting
+				if (levels.find("</objectgroup>") <= 5) {
+					stop = true;
+					break;
+				}
+			}
+		}	
+		/// need more efficient way of breaking loop
+		stop1 = true;
+		break;
 	}
-	//etc etc
-
-
-
-
 }
 
 // display graphics directly to using undocumented PlayBuffer functions
