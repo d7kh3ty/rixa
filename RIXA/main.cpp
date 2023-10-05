@@ -7,6 +7,8 @@
 int DISPLAY_WIDTH = 1280;
 int DISPLAY_HEIGHT = 800;
 int DISPLAY_SCALE = 1;
+
+// Game states
 enum GameStateType
 {
 	menu,
@@ -19,7 +21,7 @@ enum GameStateType
 
 GameStateType state;
 
-//what are the types of game objects
+// Game object types
 enum GameObjectType
 {
 	TYPE_NULL = -1,
@@ -30,6 +32,7 @@ enum GameObjectType
 	background,
 };
 
+// Enemy variation types
 enum EnemyType
 {
 	// THIS MUST BE DONE
@@ -38,6 +41,7 @@ enum EnemyType
 	TYPE_ENEMY3=103,
 	TYPE_ENEMY4=104,
 };
+
 // Player states
 enum AngelState
 {
@@ -48,6 +52,7 @@ enum AngelState
 };
 
 AngelState angelState = STATE_APPEAR;
+
 void HandlePlayerControls();
 void UpdateCamera();
 void UpdateProjectiles();
@@ -56,7 +61,6 @@ void UpdateGameObjects();
 void DrawOffset(GameObject* go);
 void DrawBackground();
 bool OutOfBounds(GameObject* go);
-
 
 Camera camera(0,0,DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
@@ -100,15 +104,14 @@ public:
 		GameObject& player = Play::GetGameObject(playerid);
 		GameObject& enemy = Play::GetGameObject(id);
 
-		//Play::SetSprite(enemy, "coins_2", 0.25f); //
 		float x = (player.pos.x) - enemy.pos.x;
 		float y = (player.pos.y) - enemy.pos.y;
 		float length = sqrt(x * x + y * y);
 
 		if (playerDetected) {			
 
-			// Shoot in direction of player
-			if (attackCooldown == 0) {
+			// Shoot in direction of player based on attack cooldown
+			if (attackCooldown == 0) { //Play::RandomRoll(120) == 1){
 				int pid = Play::CreateGameObject(e_projectile, { enemy.pos.x, enemy.pos.y }, 90, "bullet");
 				GameObject& bullet = Play::GetGameObject(pid);
 				Play::PlayAudio("tool");
@@ -136,7 +139,8 @@ public:
 			}
 
 
-		} else if (length < detectionRange) {
+		}
+		else if (length < detectionRange) {
 			playerDetected = true; 
 		}
 
@@ -150,11 +154,12 @@ public:
 		// We can use the update projectiles to handle this
 		std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
 
+		// Detect player collision
 		for (int pid : projectiles) {
 			GameObject& bullet = Play::GetGameObject(pid);
-			if (angelState != STATE_DEAD && Play::IsColliding(bullet, player)) {
+			if (Play::IsColliding(bullet, player) && angelState != STATE_DEAD) {
 				angelState = STATE_DEAD;
-				Play::PlayAudio("die");
+				//Play::PlayAudio("die");
 			}
 
 			// if want more bullet functions?
@@ -171,6 +176,8 @@ public:
 private:
 	EnemyType type;
 	int id;
+	//int health;
+
 	int speed = 6;
 	int attackSpeed = 77; // lower is faster
 	int attackCooldown = 0;
@@ -211,7 +218,6 @@ enum Direction
 	DIRECTION_NORTH_WEST,
 	IDLE,
 };
-
 
 void HandlePlayerControls()
 {
@@ -315,6 +321,7 @@ void HandlePlayerControls()
 		nya.velocity = Vector2D(x / length, y / length);
 	}
 
+	// Collisions in the environment checking
 	for (auto c : level.getCollisionObjects()) {
 		if (c.checkColliding(player.pos.x, player.pos.y, 64)) {
 			player.pos = player.oldPos;
@@ -351,13 +358,30 @@ void UpdateGameObjects()
 void UpdateProjectiles()
 {
 	std::vector<int> pv = Play::CollectGameObjectIDsByType(projectile);
+	//GameObject& player = Play::GetGameObject(playerid);
 
+	// Check is player projectiles hit the enemy
 	for (int id : pv)
 	{
+		bool isDestroyed = false;
+
 		GameObject& p = Play::GetGameObject(id);
+		std::vector<int> ev = Play::CollectGameObjectIDsByType(enemy);
+
+		for(int e : ev)
+		{
+			GameObject& enemy = Play::GetGameObject(e);
+			if (Play::IsColliding(enemy, p))
+			{
+				Play::DestroyGameObject(e);
+				isDestroyed = true;
+				break;
+			}
+
+		}
 
 		// Destroy out of bounds bullets
-		if (OutOfBounds(&p))
+		if (OutOfBounds(&p) || isDestroyed)
 		{
 			Play::DestroyGameObject(id);
 			continue;
@@ -367,7 +391,6 @@ void UpdateProjectiles()
 	}
 
 }
-
 
 void UpdateCamera()
 {
@@ -501,14 +524,8 @@ bool MainGameUpdate( float elapsedTime )
 		UpdateGameObjects();
 		// DVD
 		//"Any similarity with fictitious events or characters was purely coincidental."
-		//v_cershinsky.UpdateEnemy();
-		//v_cershinsky.UpdateEnemyProjectiles();
 
-		//j_bidet.UpdateEnemy();
-		//j_bidet.UpdateEnemyProjectiles();
-
-		//ursula_L.UpdateEnemy();
-		//ursula_L.UpdateEnemyProjectiles();
+		// Testing for enemy generation
 		for (auto i = 0; i != gameState.enemies.size(); i++)
 		{
 			gameState.enemies[i].update();
