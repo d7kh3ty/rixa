@@ -144,12 +144,6 @@ public:
 			playerDetected = true; 
 		}
 
-		DrawOffset(&enemy);
-
-		// Destroy out of bounds game objects
-		if (OutOfBounds(&enemy)) {
-			Play::DestroyGameObject(id);
-		}
 
 		// We can use the update projectiles to handle this
 		std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
@@ -171,6 +165,10 @@ public:
 				Play::DestroyGameObject(pid);
 			}
 		}
+	}
+
+	int getID() {
+		return id;
 	}
 
 private:
@@ -331,10 +329,33 @@ void HandlePlayerControls()
 
 }
 
+void enemyUpdate() {
+	// Testing for enemy generation
+	for (auto i = 0; i != gameState.enemies.size(); i++)
+	{
+		// get data
+		auto enemyobj = gameState.enemies[i];
+		auto enemyid = enemyobj.getID();
+		GameObject& enemy = Play::GetGameObject(enemyid);
+		gameState.enemies[i].update();
+		//enemyobj.update();
+		// Destroy out of bounds game objects
+		if (OutOfBounds(&enemy)) {
+			Play::DestroyGameObject(enemyid);
+		}
+
+		DrawOffset(&enemy);
+
+	}
+}
+
 void UpdateGameObjects()
 {
 
+
 	UpdateCamera();
+
+	enemyUpdate();
 
 	// BACKGROUND MUST BE UPDATED FIRST
 	//DrawBackground();
@@ -366,18 +387,20 @@ void UpdateProjectiles()
 		bool isDestroyed = false;
 
 		GameObject& p = Play::GetGameObject(id);
-		std::vector<int> ev = Play::CollectGameObjectIDsByType(enemy);
+		//std::vector<int> ev = Play::CollectGameObjectIDsByType(enemy);
 
-		for(int e : ev)
+		for(auto e = gameState.enemies.begin(); e != gameState.enemies.end();)
 		{
-			GameObject& enemy = Play::GetGameObject(e);
-			if (Play::IsColliding(enemy, p))
+			Enemy enemy = *e;
+			GameObject& enemyobj = Play::GetGameObject(enemy.getID());
+			if (Play::IsColliding(enemyobj, p))
 			{
-				Play::DestroyGameObject(e);
+				Play::DestroyGameObject(enemy.getID());
 				isDestroyed = true;
+				gameState.enemies.erase(e);
 				break;
 			}
-
+			else { ++e; }
 		}
 
 		// Destroy out of bounds bullets
@@ -524,12 +547,6 @@ bool MainGameUpdate( float elapsedTime )
 		UpdateGameObjects();
 		// DVD
 		//"Any similarity with fictitious events or characters was purely coincidental."
-
-		// Testing for enemy generation
-		for (auto i = 0; i != gameState.enemies.size(); i++)
-		{
-			gameState.enemies[i].update();
-		}
 		DrawOffset(&player);
 
 	}
