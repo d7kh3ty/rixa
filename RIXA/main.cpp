@@ -483,13 +483,14 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 
 	//Play::CreateGameObject(shadow, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 } ,  0, "generic_shadow_one");
 
-	// DVD: enemies 
-	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, {500, 500}, {0,0}));
-
-	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, { 600, 500 }, { 0,0 }));
-
-	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, { 500, 600 }, { 0,0 }));
-
+	for (auto e : level.getEnemyData()) {
+		if (e.type == 1)
+			gameState.enemies.push_back(Enemy(TYPE_ENEMY1, {e.x, e.y}, {0,0}));
+		if (e.type == 2)
+			gameState.enemies.push_back(Enemy(TYPE_ENEMY2, {e.x, e.y}, {0,0}));
+		if (e.type ==3)
+			gameState.enemies.push_back(Enemy(TYPE_ENEMY3, {e.x, e.y}, {0,0}));
+	}
 }
 
 // Called by PlayBuffer every frame (60 times a second!)
