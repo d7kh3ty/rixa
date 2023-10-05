@@ -3,6 +3,7 @@
 #include "Play.h"
 #include "Camera.h"
 #include "Level.h"
+#include <cmath>
 
 int DISPLAY_WIDTH = 800;
 int DISPLAY_HEIGHT = 800;
@@ -37,7 +38,7 @@ enum EnemyType
 {
 	// THIS MUST BE DONE
 	TYPE_ENEMY1=101,
-	TYPE_ENEMY2=102,
+	TYPE_TANK=102,
 	TYPE_ENEMY3=103,
 	TYPE_ENEMY4=104,
 };
@@ -49,6 +50,20 @@ enum AngelState
 	STATE_HALT,
 	STATE_PLAY,
 	STATE_DEAD,
+};
+
+//what are the directions a gameobject can chose to move in
+enum Direction
+{
+	DIRECTION_NORTH,
+	DIRECTION_NORTH_EAST,
+	DIRECTION_EAST,
+	DIRECTION_SOUTH_EAST,
+	DIRECTION_SOUTH,
+	DIRECTION_SOUTH_WEST,
+	DIRECTION_WEST,
+	DIRECTION_NORTH_WEST,
+	IDLE,
 };
 
 AngelState angelState = STATE_APPEAR;
@@ -75,6 +90,8 @@ Level level;
 
 int playerid;
 
+// Menu
+int offset = 0;
 
 // DVD ENEMY CLASS
 class Enemy {
@@ -86,6 +103,11 @@ public:
 		if (ENEMY_TYPE == TYPE_ENEMY1)
 		{
 			id = Play::CreateGameObject(enemy, pos, 10, "coin");
+			Play::GetGameObject(id).animSpeed = 1;
+		}
+		else if(ENEMY_TYPE == TYPE_TANK)
+		{
+			//id = Play::CreateGameObject(enemy, pos, 10, "tank_south");
 			Play::GetGameObject(id).animSpeed = 1;
 		}
 		else
@@ -121,26 +143,38 @@ public:
 				//Play::PlayAudio("tool");
 				float speed_check = length / bulletSpeed;
 				bullet.velocity = Vector2D(x / speed_check, y / speed_check);
-				attackCooldown = attackSpeed; 
+				attackCooldown = attackSpeed;
+
+				float velx = Play::RandomRollRange(-10, 10);
+				float vely = Play::RandomRollRange(-10, 10);
+				float magnitude = sqrt(x * x + y * y);
+
+				enemy.velocity = { (velx * speed * 10) / magnitude, (vely * speed * 10) / magnitude };
 			} else {
 				attackCooldown--;
 			}
 
-			// Move in direction of player to left or right
-			if (leftright) {
-				x = floor(((player.pos.x) - enemy.pos.x - 333));
-			}
-			else {
-				x = floor(((player.pos.x) - enemy.pos.x + 333));
-			}
-			length = sqrt(x * x + y * y);
-			float speed_check = length / speed;
-			if (length > 10) {
-				enemy.velocity = Vector2D(x / speed_check, y / speed_check);
-			}
-			else {
-				enemy.velocity = Vector2D(0, 0);
-			}
+			// Test implementation
+			// Choose a random direction
+
+
+			//// Move in direction of player to left or right
+			//if (leftright) {
+			//	x = floor(((player.pos.x) - enemy.pos.x - 333));
+			//}
+			//else {
+			//	x = floor(((player.pos.x) - enemy.pos.x + 333));
+			//}
+
+			//length = sqrt(x * x + y * y);
+			//float speed_check = length / speed;
+
+			//if (length > 10) {
+			//	enemy.velocity = Vector2D(x / speed_check, y / speed_check);
+			//}
+			//else {
+			//	enemy.velocity = Vector2D(0, 0);
+			//}
 
 
 		}
@@ -209,19 +243,7 @@ struct GameState
 GameState gameState;
 
 
-//what are the directions a gameobject can chose to move in
-enum Direction
-{
-	DIRECTION_NORTH,
-	DIRECTION_NORTH_EAST,
-	DIRECTION_EAST,
-	DIRECTION_SOUTH_EAST,
-	DIRECTION_SOUTH,
-	DIRECTION_SOUTH_WEST,
-	DIRECTION_WEST,
-	DIRECTION_NORTH_WEST,
-	IDLE,
-};
+//Direction direction = IDLE;
 
 void HandlePlayerControls()
 {
@@ -266,9 +288,11 @@ void HandlePlayerControls()
 	//	|| (player.velocity.x < 0 && player.pos.x < 0))
 	//	player.velocity.x = 0;
 
+
 	switch (direction) {
 	case IDLE:
-		Play::SetSprite(player, "angel_walk_north", 0.0f);
+		//Play::SetSprite(player, "angel_walk_north", 0.0f);
+		player.animSpeed = 0;
 		player.velocity = { 0, 0 };
 		break;
 
@@ -305,7 +329,7 @@ void HandlePlayerControls()
 		player.velocity = { -gameState.angle, -gameState.angle };
 		break;
 	}
-	
+
 	// FIRE WEAPON
 	if (Play::KeyPressed(VK_LBUTTON)) // Mouse Button
 	{
@@ -323,6 +347,7 @@ void HandlePlayerControls()
 
 		int length = sqrt(x * x + y * y) / 10;
 		nya.velocity = Vector2D(x / length, y / length);
+
 	}
 
 	// Collisions in the environment checking
@@ -512,15 +537,35 @@ bool MainGameUpdate( float elapsedTime )
 	{
 		//Play::DrawFontText("132px", "RIXA",
 		//	{ DISPLAY_WIDTH / 2, 100 }, Play::CENTRE);
-		Play::DrawSprite("MarsBG", { 0,0 }, 0);
-		Play::DrawSprite("title", { DISPLAY_WIDTH / 2, 100 }, 0);
+		Play::DrawSprite("MarsBG", { 0, -4500 + DISPLAY_HEIGHT + offset}, 0);
+		Play::DrawSprite("title", { DISPLAY_WIDTH / 2, 300 }, 0);
 
-		Play::DrawFontText("64px", "PRESS SPACE TO START",
-			{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 300 }, Play::CENTRE);
+		offset+=8;//+=2250/128;
+
+		if(offset > 9000 - DISPLAY_HEIGHT)
+		{
+			offset = 0;
+		}
+
+		if((int)gameState.timer % 2 == 0)
+		{
+			Play::DrawFontText("64px", "PRESS SPACE TO START",
+				{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 300 }, Play::CENTRE);
+
+		}
+
+		//Play::DrawFontText("64px", "PRESS SPACE TO START",
+		//	{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 300 }, Play::CENTRE);
 
 		if (Play::KeyPressed(VK_SPACE))
 		{
+			//for(float i = 0; i < 50; i+=0.1)
+			//{
+			//	Play::ClearDrawingBuffer({ i,i,i });
+			//	Play::PresentDrawingBuffer();
+			//}
 			state = play;
+			Play::StartAudioLoop("Data\\Audio\\level_one_shorter.mp3");
 		}
 	}
 	else if (state == play)
