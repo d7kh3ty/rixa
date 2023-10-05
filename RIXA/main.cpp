@@ -81,8 +81,9 @@ public:
 		// Set sprite, radius and speeds depending on the enemy type given
 		if (ENEMY_TYPE == TYPE_ENEMY1)
 		{
-			id = Play::CreateGameObject(enemy, pos, 10, "coin");
-			Play::GetGameObject(id).animSpeed = 1;
+			id = Play::CreateGameObject(enemy, pos, 10, "cute_north");
+			Play::SetSprite(Play::GetGameObject(id), "cute_south", 0.5f);
+			//Play::GetGameObject(id).animSpeed = 1;
 		}
 		else
 		{
