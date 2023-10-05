@@ -4,6 +4,13 @@
 #include "Play.h"
 #include "Collision.h"
 
+
+struct EnemyData {
+	int x;
+	int y;
+	int type;
+};
+
 using std::string, std::vector;
 struct Chunk {
 	int x;
@@ -34,5 +41,6 @@ private:
 	int frame = 71;
 
 	vector<CollisionBox> collisionObjects;
+	vector<EnemyData> enemies;
 };
 
