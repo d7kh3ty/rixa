@@ -274,8 +274,6 @@ void Level::display(float x, float y) {
 		for (int j = 0; j < chunk.tiles.size(); j++) {
 			auto line = chunk.tiles[j];
 			for (int k = 0; k < line.size(); k++) {
-				//auto idk = *kt;
-
 				PlayGraphics::Instance().Draw(tileset, {(k+chunk.x)*px+x,(j+chunk.y)*py+y}, line[k]+frame);
 			}
 		}
