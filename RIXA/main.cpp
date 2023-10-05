@@ -38,7 +38,7 @@ enum EnemyType
 {
 	// THIS MUST BE DONE
 	TYPE_ENEMY1=101,
-	TYPE_TANK=102,
+	TYPE_ENEMY2=102,
 	TYPE_ENEMY3=103,
 	TYPE_ENEMY4=104,
 };
@@ -105,11 +105,11 @@ public:
 			id = Play::CreateGameObject(enemy, pos, 10, "coin");
 			Play::GetGameObject(id).animSpeed = 1;
 		}
-		else if(ENEMY_TYPE == TYPE_TANK)
-		{
-			//id = Play::CreateGameObject(enemy, pos, 10, "tank_south");
-			Play::GetGameObject(id).animSpeed = 1;
-		}
+		//else if(ENEMY_TYPE == TYPE_TANK)
+		//{
+		//	//id = Play::CreateGameObject(enemy, pos, 10, "tank_south");
+		//	Play::GetGameObject(id).animSpeed = 1;
+		//}
 		else
 		{
 			// If enemy type does not match
