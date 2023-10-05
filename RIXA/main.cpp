@@ -4,7 +4,7 @@
 #include "Camera.h"
 #include "Level.h"
 
-int DISPLAY_WIDTH = 1280;
+int DISPLAY_WIDTH = 800;
 int DISPLAY_HEIGHT = 800;
 int DISPLAY_SCALE = 1;
 
@@ -67,6 +67,10 @@ Camera camera(0,0,DISPLAY_WIDTH, DISPLAY_HEIGHT);
 float wBound;
 float hBound;
 
+// top left / bottom right
+int tlBound;
+int brBound;
+
 Level level;
 
 int playerid;
@@ -114,7 +118,7 @@ public:
 			if (attackCooldown == 0) { //Play::RandomRoll(120) == 1){
 				int pid = Play::CreateGameObject(e_projectile, { enemy.pos.x, enemy.pos.y }, 90, "bullet");
 				GameObject& bullet = Play::GetGameObject(pid);
-				Play::PlayAudio("tool");
+				//Play::PlayAudio("tool");
 				float speed_check = length / bulletSpeed;
 				bullet.velocity = Vector2D(x / speed_check, y / speed_check);
 				attackCooldown = attackSpeed; 
@@ -325,7 +329,7 @@ void HandlePlayerControls()
 	for (auto c : level.getCollisionObjects()) {
 		if (c.checkColliding(player.pos.x, player.pos.y, 64)) {
 			player.pos = player.oldPos;
-			player.velocity = { 0, 0 };
+			//player.velocity = player.;
 		}
 	}
 
@@ -397,25 +401,25 @@ void UpdateCamera()
 	GameObject& player = Play::GetGameObject(playerid);
 
 	// Camera bounding for level
-	if (player.pos.x > 3 / 2 * wBound) // R Bound
+	if (player.pos.x + (DISPLAY_WIDTH / 2) >  wBound) // R Bound
 	{
-		camera.Follow(wBound, player.pos.y);
+		camera.Follow(wBound - DISPLAY_WIDTH / 2, player.pos.y);
 	}
-	else if (player.pos.x < -3 / 2 * wBound) // L Bound
+	else if (player.pos.x - DISPLAY_WIDTH / 2 < 0) // L Bound
 	{
-		camera.Follow(-wBound, player.pos.y);
+		camera.Follow(DISPLAY_WIDTH/2, player.pos.y);
 	}
-	else if (player.pos.y < -hBound) // Top of the level bound
+	else if (player.pos.y - DISPLAY_HEIGHT/2  < -hBound) // Top of the level bound
 	{
-		camera.Follow(player.pos.x, -hBound);
+		camera.Follow(player.pos.x, -hBound + DISPLAY_HEIGHT / 2 );
 	}
-	else if (player.pos.x < -3 / 2 * wBound && player.pos.y < -hBound)
+	else if (player.pos.x - DISPLAY_WIDTH / 2 < 0 && player.pos.y - DISPLAY_HEIGHT / 2 < -hBound) // Both height and width bounds reached
 	{
-		camera.Follow(-wBound, -hBound);
+		camera.Follow(DISPLAY_WIDTH/2, -hBound + DISPLAY_HEIGHT / 2 );
 	}
-	else if (player.pos.x < 3 / 2 * wBound && player.pos.y < -hBound)
+	else if (player.pos.x + (DISPLAY_WIDTH / 2) > wBound && player.pos.y - DISPLAY_HEIGHT / 2  < -hBound)
 	{
-		camera.Follow(wBound, -hBound);
+		camera.Follow(wBound, -hBound + DISPLAY_HEIGHT / 2 );
 	}
 	else // Otherwise
 	{
@@ -461,16 +465,16 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 
 	// Set default game objects
 	//Play::CreateGameObject(angel, { DISPLAY_WIDTH/2+600,DISPLAY_HEIGHT/2+200 }, 100, "angel");
-	playerid = Play::CreateGameObject(angel, { DISPLAY_WIDTH/2+600,DISPLAY_HEIGHT/2+200 }, 100, "angel");
-	level = Level::Level("Data\\Levels\\", "island", "Data\\Levels\\test_map.xml");
+	playerid = Play::CreateGameObject(angel, { 800,600 }, 100, "angel");
+	level = Level::Level("Data\\Levels\\", "MarsBG", "Data\\Levels\\level1.xml");
 
 	//Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
 
 	//wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
 	//hBound = 7 / 4 * Play::GetSpriteHeight("MarsBG");
 
-	wBound = level.getWidth();
-	hBound = level.getHeight();
+	wBound = 30 * 32;//level.getWidth();
+	hBound = 128 * 32 -100;//level.getHeight();
 
 	//approximate directional movement
 	gameState.angle = gameState.speed * 0.7;
@@ -501,6 +505,7 @@ bool MainGameUpdate( float elapsedTime )
 
 	// Get player object
 	GameObject& player = Play::GetGameObject(playerid);
+	PlayGraphics::Instance().DrawRect({ 0,DISPLAY_WIDTH }, { 0,DISPLAY_HEIGHT },{255,0,255}, 1);
 
 	// Placeholders of menu and such
 	if (state == menu)
@@ -521,6 +526,7 @@ bool MainGameUpdate( float elapsedTime )
 	else if (state == play)
 	{
 		HandlePlayerControls();
+		PlayGraphics::Instance().DrawRect({ 0,DISPLAY_WIDTH }, { 0,DISPLAY_HEIGHT },{255,0,255}, 1);
 		level.display(-camera.GetXOffset(), -camera.GetYOffset());
 		UpdateGameObjects();
 		// DVD
@@ -532,6 +538,7 @@ bool MainGameUpdate( float elapsedTime )
 			gameState.enemies[i].update();
 		}
 		DrawOffset(&player);
+		PlayGraphics::Instance().DrawRect({ 0,DISPLAY_WIDTH / 2 }, { 0,DISPLAY_HEIGHT / 2 }, { 255,0,255 }, 0);
 
 	}
 

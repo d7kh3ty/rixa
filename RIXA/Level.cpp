@@ -31,7 +31,7 @@ Level::Level(string path, string tileset_s, string level) {
 	levels.erase(0, layer+5);
 
 	levels.erase(0, levels.find("width=\"") + 7);
-	width = stoi(levels.substr(0, levels.find("\""))) * px;
+	width = stoi(levels.substr(0, levels.find("\"")));
 	levels.erase(0, levels.find("height=\"") + 8);
 	height = stoi(levels.substr(0, levels.find("\""))) * px;
 

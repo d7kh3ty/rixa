@@ -36,8 +36,8 @@ private:
 	int width;
 	int height;
 	// number of pixels for each tile
-	int px = 24;
-	int py = 24;
+	int px = 32;
+	int py = 32;
 	// required to sync frames with file format
 	int frame = 71;
 
