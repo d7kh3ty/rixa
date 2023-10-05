@@ -69,7 +69,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	// Set default game objects
 	Play::CreateGameObject(angel, { DISPLAY_WIDTH/2+600,DISPLAY_HEIGHT/2+200 }, 100, "angel");
 
-	level = Level::Level("Data\\Levels\\", "island", "Data\\Levels\\test_map.xml");
+	level = Level::Level("Data\\Levels\\", "MarsBG", "Data\\Levels\\level1.xml");
 
 	//Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
 
