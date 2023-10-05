@@ -136,6 +136,15 @@ public:
 
 		if (playerDetected) {			
 
+			// Collisions in the environment checking
+			for (auto c : level.getCollisionObjects()) {
+				if (c.checkColliding(enemy.pos.x, enemy.pos.y, 64)) {
+					//enemy.pos = enemy.oldPos;
+					//player.velocity = player.;
+					enemy.velocity = -enemy.velocity;
+				}
+			}
+
 			// Shoot in direction of player based on attack cooldown
 			if (attackCooldown == 0) { //Play::RandomRoll(120) == 1){
 				int pid = Play::CreateGameObject(e_projectile, { enemy.pos.x, enemy.pos.y }, 90, "bullet");
