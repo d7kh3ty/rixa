@@ -27,6 +27,7 @@ public:
 	int getHeight();
 	void addCollisionObject(CollisionBox box);
 	vector<CollisionBox> getCollisionObjects();
+	vector<EnemyData> getEnemyData();
 
 
 private:

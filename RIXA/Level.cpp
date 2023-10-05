@@ -296,3 +296,7 @@ void Level::addCollisionObject(CollisionBox box) {
 vector<CollisionBox> Level::getCollisionObjects() {
 	return collisionObjects;
 }
+
+vector<EnemyData> Level::getEnemyData() {
+	return enemies;
+}
