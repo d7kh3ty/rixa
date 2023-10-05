@@ -135,14 +135,14 @@ public:
 
 		if (playerDetected) {
 
-			// Collisions in the environment checking
-			for (auto c : level.getCollisionObjects()) {
-				if (c.checkColliding(enemy.pos.x, enemy.pos.y, 64)) {
-					//enemy.pos = enemy.oldPos;
-					//player.velocity = player.;
-					enemy.velocity = -enemy.velocity;
-				}
-			}
+			//// Collisions in the environment checking
+			//for (auto c : level.getCollisionObjects()) {
+			//	if (c.checkColliding(enemy.pos.x, enemy.pos.y, 64)) {
+			//		//enemy.pos = enemy.oldPos;
+			//		//player.velocity = player.;
+			//		enemy.velocity = -enemy.velocity;
+			//	}
+			//}
 
 			// Shoot in direction of player based on attack cooldown
 			if (attackCooldown == 0) { //Play::RandomRoll(120) == 1){
@@ -345,6 +345,10 @@ public:
 		}
 	}
 
+	int getID() {
+		return id;
+	}
+
 private:
 	EnemyType type;
 	int id;
@@ -528,20 +532,23 @@ void UpdateProjectiles()
 		bool isDestroyed = false;
 
 		GameObject& p = Play::GetGameObject(id);
-		std::vector<int> ev = Play::CollectGameObjectIDsByType(enemy);
-
-		for(int e : ev)
-		{
-			GameObject& enemy = Play::GetGameObject(e);
-			if (Play::IsColliding(enemy, p))
+		//std::vector<int> ev = Play::CollectGameObjectIDsByType(enemy);
+		//std::vector<Enemy> ev = gameState.enemies;
+		for (auto i = gameState.enemies.begin(); i != gameState.enemies.end();) {
+			Enemy enobj = *i;
+			int id = enobj.getID();
+			GameObject& en = Play::GetGameObject(id);
+			if (Play::IsColliding(en, p))
 			{
-				Play::DestroyGameObject(e);
+				Play::DestroyGameObject(id);
 				isDestroyed = true;
+				gameState.enemies.erase(i);
 				break;
 			}
-
+			else {
+				i++;
+			}
 		}
-
 		// Destroy out of bounds bullets
 		if (OutOfBounds(&p) || isDestroyed)
 		{
