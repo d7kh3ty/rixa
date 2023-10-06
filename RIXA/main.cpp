@@ -32,6 +32,7 @@ enum GameObjectType
 	drone,
 	tank,
 	roller,
+	turret,
 	background,
 	shadow,
 	explosion,
@@ -162,6 +163,18 @@ public:
 			detectionRange = 666;
 			attackRange = 250.0f;
 			animSpeed = 0.08f;
+		}
+		else if (ENEMY_TYPE == TYPE_ENEMY4)
+		{
+			type = TYPE_ENEMY4;
+			id = Play::CreateGameObject(turret, pos, 6, "turret_south");
+			GameObject& go = Play::GetGameObject(id);
+			go.animSpeed = 0.1;
+			go.scale = 2.0;
+			speed = 0;
+			attackSpeed = 11;
+			health = 8;
+			detectionRange = 666;
 		}
 
 		else
@@ -400,6 +413,37 @@ public:
 				break;
 			case DIRECTION_NORTH_WEST:
 				Play::SetSprite(enemy, "tracked_northwest", 0.07f);
+				break;
+			}
+
+		case TYPE_ENEMY4:
+			switch (dir) {
+			case IDLE:
+				Play::SetSprite(enemy, "turret_south", 0.0f);
+				break;
+			case DIRECTION_NORTH:
+				Play::SetSprite(enemy, "turret_north", 0.07f);
+				break;
+			case DIRECTION_NORTH_EAST:
+				Play::SetSprite(enemy, "turret_northeast", 0.07f);
+				break;
+			case DIRECTION_EAST:
+				Play::SetSprite(enemy, "turret_east", 0.07f);
+				break;
+			case DIRECTION_SOUTH_EAST:
+				Play::SetSprite(enemy, "turret_southeast", 0.07f);
+				break;
+			case DIRECTION_SOUTH:
+				Play::SetSprite(enemy, "turret_south", 0.07f);
+				break;
+			case DIRECTION_SOUTH_WEST:
+				Play::SetSprite(enemy, "turret_southwest", 0.07f);
+				break;
+			case DIRECTION_WEST:
+				Play::SetSprite(enemy, "turret_west", 0.07f);
+				break;
+			case DIRECTION_NORTH_WEST:
+				Play::SetSprite(enemy, "turret_northwest", 0.07f);
 				break;
 			}
 			break;
