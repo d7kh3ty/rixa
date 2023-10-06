@@ -868,7 +868,7 @@ bool MainGameUpdate( float elapsedTime )
 		if (Play::KeyPressed(VK_SPACE))
 		{
 			state = play;
-			//Play::StartAudioLoop("Data\\Audio\\level_one_shorter.mp3");
+			Play::StartAudioLoop("Data\\Audio\\level_one_shorter.mp3");
 		}
 	}
 	else if (state == play)
