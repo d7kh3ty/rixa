@@ -744,9 +744,9 @@ void UpdateGameObjects()
 	}
 
   	// for debug
-	for (auto c : level.getCollisionObjects()) {
-		PlayGraphics::Instance().DrawRect(c.getTopleft() - camera.GetOffset(), c.getBottomRight() - camera.GetOffset(), {255, 0, 0}, false);
-	}
+	//for (auto c : level.getCollisionObjects()) {
+	//	PlayGraphics::Instance().DrawRect(c.getTopleft() - camera.GetOffset(), c.getBottomRight() - camera.GetOffset(), {255, 0, 0}, false);
+	//}
   
   // Update shadow -- out for some reason?
  //   GameObject& shadowGO = Play::GetGameObjectByType(shadow);
