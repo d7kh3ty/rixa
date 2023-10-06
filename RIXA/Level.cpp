@@ -267,14 +267,18 @@ Level::Level(string path, string tileset_s, string level) {
 
 // display graphics directly to using undocumented PlayBuffer functions
 // no gameobjects needed
-void Level::display(float x, float y) {
+void Level::display(float x, float y, int dwidth, int dheight) {
 	for (auto it = chunks.begin(); it != chunks.end(); ++it) {
 		//it->draw();
 		auto chunk = *it;
 		for (int j = 0; j < chunk.tiles.size(); j++) {
 			auto line = chunk.tiles[j];
 			for (int k = 0; k < line.size(); k++) {
-				PlayGraphics::Instance().Draw(tileset, {(k+chunk.x)*px+x,(j+chunk.y)*py+y}, line[k]+frame);
+				int dx = (k + chunk.x) * px + x;
+				int dy = (j+chunk.y)*py+y;
+				if (dx >= -33 && dx < dwidth && dy >= -33 && dy < dheight) {
+					PlayGraphics::Instance().Draw(tileset, { dx,dy }, line[k] + frame);
+				}
 			}
 		}
 	}
@@ -297,4 +301,14 @@ vector<CollisionBox> Level::getCollisionObjects() {
 
 vector<EnemyData> Level::getEnemyData() {
 	return enemies;
+}
+
+bool Level::isColliding(int x, int y, int r) {
+	for (auto it = collisionObjects.begin(); it != collisionObjects.end(); ++it) {
+		auto obj = *it;
+		if (obj.checkColliding(x, y, r)) {
+			return true;
+		}
+	}
+	return false;
 }
