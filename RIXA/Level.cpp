@@ -270,7 +270,7 @@ Level::Level(string path, string tileset_s, string level) {
 
 		std::cout << "dbg";
 
-		if (name == "enemy5") {
+		if (name == "enemy4") {
 			stop = false;
 			// get chunks
 			while (!stop)

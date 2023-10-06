@@ -802,7 +802,6 @@ void UpdateProjectiles()
 		// Allows bullets to despawn witthout running expensive enemy checking
 		if (OutOfBounds(&p) || Play::IsAnimationComplete(p)) // || level.isColliding(p.pos.x, p.pos.y, p.radius))
 		{
-			Play::DestroyGameObject(id);
 			continue;
 		}
 
