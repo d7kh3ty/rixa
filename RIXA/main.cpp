@@ -32,6 +32,7 @@ enum GameObjectType
 	drone,
 	tank,
 	roller,
+	turret,
 	background,
 	shadow,
 	explosion,
@@ -104,6 +105,8 @@ bool playerColour = false;
 int playerColourCooldown = 11;
 float range = 300.0f;
 
+int playerBulletSpeed = 11;
+
 void updatePlayerColour(Play::Colour c) {
 	Play::ColourSprite("angel_walk_north", c);
 	Play::ColourSprite("angel_walk_northeast", c);
@@ -133,11 +136,39 @@ public:
 		else if(ENEMY_TYPE == TYPE_ENEMY2)
 		{
 			type = TYPE_ENEMY2;
-			id = Play::CreateGameObject(tank, pos, 10, "tank_south");
+			id = Play::CreateGameObject(tank, pos, 30, "tank_south");
 			GameObject& go = Play::GetGameObject(id);
 			go.animSpeed = 0.1;
 			go.scale = 2.0;
+			speed = 1;
+			health = 3;
+			detectionRange = 444;
 		}
+		else if(ENEMY_TYPE == TYPE_ENEMY3)
+		{
+			type = TYPE_ENEMY3;
+			id = Play::CreateGameObject(roller, pos, 10, "tracked_south");
+			GameObject& go = Play::GetGameObject(id);
+			go.animSpeed = 0.1;
+			go.scale = 2.0;
+			speed = 5;
+			attackSpeed = 11;
+			health = 8;
+			detectionRange = 666;
+		}
+		else if (ENEMY_TYPE == TYPE_ENEMY4)
+		{
+			type = TYPE_ENEMY4;
+			id = Play::CreateGameObject(turret, pos, 6, "turret_south");
+			GameObject& go = Play::GetGameObject(id);
+			go.animSpeed = 0.1;
+			go.scale = 2.0;
+			speed = 0;
+			attackSpeed = 11;
+			health = 8;
+			detectionRange = 666;
+		}
+
 		else
 		{
 			// If enemy type does not match
@@ -347,36 +378,66 @@ public:
 		case TYPE_ENEMY3:
 			switch (dir) {
 			case IDLE:
-				Play::SetSprite(enemy, "tank_south", 0.0f);
+				Play::SetSprite(enemy, "tracked_south", 0.0f);
 				break;
 			case DIRECTION_NORTH:
-				Play::SetSprite(enemy, "tank_north", 0.07f);
+				Play::SetSprite(enemy, "tracked_north", 0.07f);
 				break;
 			case DIRECTION_NORTH_EAST:
-				Play::SetSprite(enemy, "tank_northeast", 0.07f);
+				Play::SetSprite(enemy, "tracked_northeast", 0.07f);
 				break;
 			case DIRECTION_EAST:
-				Play::SetSprite(enemy, "tank_east", 0.07f);
+				Play::SetSprite(enemy, "tracked_east", 0.07f);
 				break;
 			case DIRECTION_SOUTH_EAST:
-				Play::SetSprite(enemy, "tanke_southeast", 0.07f);
+				Play::SetSprite(enemy, "tracked_southeast", 0.07f);
 				break;
 			case DIRECTION_SOUTH:
-				Play::SetSprite(enemy, "tank_south", 0.07f);
+				Play::SetSprite(enemy, "tracked_south", 0.07f);
 				break;
 			case DIRECTION_SOUTH_WEST:
-				Play::SetSprite(enemy, "tank_southwest", 0.07f);
+				Play::SetSprite(enemy, "tracked_southwest", 0.07f);
 				break;
 			case DIRECTION_WEST:
-				Play::SetSprite(enemy, "tank_west", 0.07f);
+				Play::SetSprite(enemy, "tracked_west", 0.07f);
 				break;
 			case DIRECTION_NORTH_WEST:
-				Play::SetSprite(enemy, "tank_northwest", 0.07f);
+				Play::SetSprite(enemy, "tracked_northwest", 0.07f);
+				break;
+			}
+
+		case TYPE_ENEMY4:
+			switch (dir) {
+			case IDLE:
+				Play::SetSprite(enemy, "turret_south", 0.0f);
+				break;
+			case DIRECTION_NORTH:
+				Play::SetSprite(enemy, "turret_north", 0.07f);
+				break;
+			case DIRECTION_NORTH_EAST:
+				Play::SetSprite(enemy, "turret_northeast", 0.07f);
+				break;
+			case DIRECTION_EAST:
+				Play::SetSprite(enemy, "turret_east", 0.07f);
+				break;
+			case DIRECTION_SOUTH_EAST:
+				Play::SetSprite(enemy, "turret_southeast", 0.07f);
+				break;
+			case DIRECTION_SOUTH:
+				Play::SetSprite(enemy, "turret_south", 0.07f);
+				break;
+			case DIRECTION_SOUTH_WEST:
+				Play::SetSprite(enemy, "turret_southwest", 0.07f);
+				break;
+			case DIRECTION_WEST:
+				Play::SetSprite(enemy, "turret_west", 0.07f);
+				break;
+			case DIRECTION_NORTH_WEST:
+				Play::SetSprite(enemy, "turret_northwest", 0.07f);
 				break;
 			}
 			break;
 		}
-
 
 		// Destroy out of bounds game objects
 		if (OutOfBounds(&enemy)) {
@@ -397,10 +458,17 @@ public:
 		}
 	}
 
+	void modHealth(int mod) {
+		health += mod;
+	}
+	int getHealth() {
+		return health;
+	}
+
 private:
 	EnemyType type;
 	int id;
-	//int health;
+	int health = 1;
 
 	int speed = 3;
 	int attackSpeed = 44; // lower is faster
@@ -530,10 +598,10 @@ void HandlePlayerControls()
 
 		// Find x and y of mouse relative to position
 		Point2D mousePos = Play::GetMousePos();
-		int x = floor(((mousePos.x + camera.GetXOffset()) - player.pos.x));
-		int y = floor(((mousePos.y + camera.GetYOffset()) - player.pos.y));
+		int x = (mousePos.x + camera.GetXOffset()) - player.pos.x;
+		int y = (mousePos.y + camera.GetYOffset()) - player.pos.y;
 
-		int length = sqrt(x * x + y * y) / 10;
+		int length = sqrt(x * x + y * y) / playerBulletSpeed;
 		nya.velocity = Vector2D(x / length, y / length);
 
 	}
@@ -648,21 +716,23 @@ void UpdateProjectiles()
 
 			if (Play::IsColliding(en, p))
 			{
-				isDestroyed = true;
-				// This is a feedback hit
+				gameState.enemies[i].modHealth(-1);
 				Explosion(en.pos, "exp_pop");
-				//gameState.enemies.erase(i);
-				gameState.enemies[i].kill();
+				isDestroyed = true;
+				if (gameState.enemies[i].getHealth() <= 0) {
+					// This is a feedback hit
+					//gameState.enemies.erase(i);
+					gameState.enemies[i].kill();
 
-				if (gameState.enemies[i].isDead()) {
-					// This is a death hit
-					Explosion(en.pos, "exp_bubble");
-					Play::PlayAudio("synthetic_bomb");
-					gameState.enemies.erase(gameState.enemies.begin() + i);
-				}
+					if (gameState.enemies[i].isDead()) {
+						// This is a death hit
+						Explosion(en.pos, "exp_bubble");
+						Play::PlayAudio("synthetic_bomb");
+						gameState.enemies.erase(gameState.enemies.begin() + i);
+					}
+				}			
 				break;
-			}
-			else {
+			} else {
 				i++;
 			}
 		}
