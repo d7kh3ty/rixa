@@ -27,6 +27,7 @@ public:
 	int getHeight();
 	void addCollisionObject(CollisionBox box);
 	bool isColliding(int x, int y, int r);
+	void changeFrame();
 	vector<CollisionBox> getCollisionObjects();
 	vector<EnemyData> getEnemyData();
 
@@ -40,7 +41,7 @@ private:
 	int px = 32;
 	int py = 32;
 	// required to sync frames with file format
-	int frame = 71;
+	int frame = 1422;
 
 	vector<CollisionBox> collisionObjects;
 	vector<EnemyData> enemies;

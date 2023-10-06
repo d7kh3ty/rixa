@@ -15,7 +15,7 @@ Level::Level() {}
 
 // load in the level
 Level::Level(string path, string tileset_s, string level) {
-	tileset = PlayGraphics::Instance().LoadSpriteSheet(path, tileset_s, 9, 8);
+	tileset = PlayGraphics::Instance().LoadSpriteSheet(path, tileset_s, 18, 135);
 	
 	// input location
 	std::ifstream input(level);
@@ -277,7 +277,7 @@ void Level::display(float x, float y, int dwidth, int dheight) {
 				int dx = (k + chunk.x) * px + x;
 				int dy = (j+chunk.y)*py+y;
 				if (dx >= -33 && dx < dwidth && dy >= -33 && dy < dheight) {
-					PlayGraphics::Instance().Draw(tileset, { dx,dy }, line[k] + frame);
+					PlayGraphics::Instance().Draw(tileset, { dx,dy }, line[k] + frame - 1);
 				}
 			}
 		}
@@ -311,4 +311,7 @@ bool Level::isColliding(int x, int y, int r) {
 		}
 	}
 	return false;
+}
+void Level::changeFrame() {
+	frame += 1;
 }

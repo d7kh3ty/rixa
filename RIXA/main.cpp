@@ -100,6 +100,8 @@ int offset = 0;
 int playerid;
 
 int playerHealth = 7;
+int weaponCooldown = 7;
+
 bool playerColour = false;
 int playerColourCooldown = 11;
 float range = 300.0f;
@@ -149,7 +151,7 @@ public:
 		}
 		else if(ENEMY_TYPE == TYPE_ENEMY3)
 		{
-			type = TYPE_ENEMY2;
+			type = TYPE_ENEMY3;
 			id = Play::CreateGameObject(roller, pos, 10, "tracked_south");
 			GameObject& go = Play::GetGameObject(id);
 			go.animSpeed = 0.1;
@@ -642,6 +644,8 @@ void HandlePlayerControls()
 		int length = sqrt(x * x + y * y) / playerBulletSpeed;
 		nya.velocity = Vector2D(x / length, y / length);
 
+		//level.changeFrame();
+
 	}
 
 	// Collisions in the environment checking
@@ -896,7 +900,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	// Set default game objects
 	//Play::CreateGameObject(angel, { DISPLAY_WIDTH/2+600,DISPLAY_HEIGHT/2+200 }, 100, "angel");
 	playerid = Play::CreateGameObject(angel, { 66,900 }, 33, "angel_walk_north");
-	level = Level::Level("Data\\Levels\\", "MarsBG", "Data\\Levels\\level1.xml");
+	level = Level::Level("Data\\Levels\\", "desert", "Data\\Levels\\level1.xml");
 
 	GameObject& player = Play::GetGameObject(playerid);
 	player.scale = 0.85f;
@@ -982,15 +986,15 @@ bool MainGameUpdate( float elapsedTime )
 		Play::DrawFontText("64px", "YOU HAVE FAILED D:",
 			{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 300 }, Play::CENTRE);
 
-		Play::DrawFontText("64px", "PRESS SPACE TO TRY AGAIN",
-			{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 100 }, Play::CENTRE);
+		//Play::DrawFontText("64px", "PRESS SPACE TO TRY AGAIN",
+		//	{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 100 }, Play::CENTRE);
 
 
-		if (Play::KeyPressed(VK_SPACE))
-		{
-			state = play;
-			MainGameEntry(0, 0);
-		}
+		//if (Play::KeyPressed(VK_SPACE))
+		//{
+		//	state = play;
+		//	MainGameEntry(0, 0);
+		//}
 
 	}
 
