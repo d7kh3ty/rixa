@@ -131,6 +131,8 @@ public:
 			GameObject& go = Play::GetGameObject(id);
 			go.animSpeed = 0.1;
 			go.scale = 0.5;
+			attackRange = 350.0f;
+			animSpeed = 0.07f;
 		}
 		else if(ENEMY_TYPE == TYPE_ENEMY2)
 		{
@@ -142,6 +144,8 @@ public:
 			speed = 1;
 			health = 3;
 			detectionRange = 444;
+			attackRange = 400.0f;
+			animSpeed = 0.05f;
 		}
 		else if(ENEMY_TYPE == TYPE_ENEMY3)
 		{
@@ -154,6 +158,8 @@ public:
 			attackSpeed = 11;
 			health = 8;
 			detectionRange = 666;
+			attackRange = 250.0f;
+			animSpeed = 0.08f;
 		}
 
 		else
@@ -210,7 +216,9 @@ public:
 			// Shoot in direction of player based on attack cooldown
 			if (attackCooldown == 0) { //Play::RandomRoll(120) == 1){
 				int pid = Play::CreateGameObject(e_projectile, { enemy.pos.x, enemy.pos.y }, 1, "bullet");
+				ownBullets.push_back(pid);
 				GameObject& bullet = Play::GetGameObject(pid);
+				//bullet.animSpeed = animSpeed;
 				//Play::PlayAudio("tool");
 				float speed_check = length / bulletSpeed;
 				bullet.velocity = Vector2D(x / speed_check, y / speed_check);
@@ -395,6 +403,8 @@ public:
 			break;
 		}
 
+		UpdateProjectile();
+
 		// Destroy out of bounds game objects
 		if (OutOfBounds(&enemy)) {
 			Play::DestroyGameObject(id);
@@ -421,6 +431,73 @@ public:
 		return health;
 	}
 
+	void UpdateProjectile()
+	{
+		GameObject& player = Play::GetGameObject(playerid);
+		GameObject& enemy = Play::GetGameObject(id);
+		int pid;
+
+		// We can use the update projectiles to handle this
+		//std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
+
+		// iterate bullets
+		for (int i = 0; i < ownBullets.size(); i++) {
+
+			pid = ownBullets[i];
+			GameObject& bullet = Play::GetGameObject(pid);
+			bool isDestroyed = false;
+			//bool canDamage = true;
+
+			//if (OutOfBounds(&bullet) || Play::IsAnimationComplete(bullet)) // || level.isColliding(p.pos.x, p.pos.y, p.radius))
+			//{
+			//	Play::DestroyGameObject(pid);
+			//	ownBullets.erase(ownBullets.begin() + i);
+			//	continue;
+			//}
+
+			if (OutOfBounds(&bullet)|| Distance(bullet.pos, enemy.pos) > attackRange)
+			{
+				//Play::DestroyGameObject(id);
+				//bullet.velocity = { 0,0 };
+				//canDamage = false;
+				ownBullets.erase(ownBullets.begin() + i);
+				Play::DestroyGameObject(pid);
+				continue;
+			}
+
+			//if (!canDamage)
+			//{
+			//	continue;
+			//}
+
+			// Detect player collision
+			if (Play::IsColliding(bullet, player)) {
+				updatePlayerColour({ 255, 0, 0 });
+				playerColour = true;
+
+				playerHealth--;
+				ownBullets.erase(ownBullets.begin() + i);
+				Play::DestroyGameObject(pid);
+				//angelState = STATE_DEAD;
+				Play::PlayAudio("die");
+				isDestroyed = true;
+				break;
+			}
+
+			// if want more bullet functions?
+
+			if (isDestroyed)//||  level.isColliding(bullet.pos.x, bullet.pos.y, bullet.radius))
+				//Play::DestroyGameObject(id);
+			{
+				ownBullets.erase(ownBullets.begin() + i);
+				Play::DestroyGameObject(pid);
+			}
+
+			DrawOffset(&bullet);
+		}
+
+	}
+
 private:
 	EnemyType type;
 	int id;
@@ -429,6 +506,7 @@ private:
 	int speed = 3;
 	int attackSpeed = 44; // lower is faster
 	int attackCooldown = 0;
+	float attackRange = 300.0f;
 
 	float bulletSpeed = 3;
 	int detectionRange = 222;
@@ -438,6 +516,10 @@ private:
 
 	int countdown = 13;
 	bool dead = false;
+
+	float animSpeed = 0.075f;
+
+	std::vector<int> ownBullets;
 
 	Direction dir = DIRECTION_SOUTH;
 };
@@ -449,7 +531,7 @@ struct GameState
 	int spriteId = 0;
 
 	// Player attributes
-	int speed = 7;
+	int speed = 5;
 	float angle; // Angle is the speed of bidirectional movement
 
 	vector<Enemy> enemies;
@@ -585,6 +667,13 @@ void UpdateGameObjects()
 
 	// Update projectiles
 	UpdateProjectiles();
+
+	// Testing for enemy generation
+	for (auto i = 0; i != gameState.enemies.size(); i++)
+	{
+		gameState.enemies[i].update();
+	}
+
 	UpdateExplosion();
 
 	if (playerHealth <= 0)
@@ -649,7 +738,7 @@ void UpdateProjectiles()
 		{
 			//Play::DestroyGameObject(id);
 			p.velocity = { 0,0 };
-			bool canDamage = false;
+			canDamage = false;
 		}
 
 		if(!canDamage)
@@ -702,34 +791,6 @@ void UpdateProjectiles()
 		DrawOffset(&p);
 	}
 
-	// We can use the update projectiles to handle this
-	std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
-
-	// iterate bullets
-	for (int pid : projectiles) {
-		GameObject& bullet = Play::GetGameObject(pid);
-		// Detect player collision
-		if (Play::IsColliding(bullet, player)) {
-			updatePlayerColour({ 255, 0, 0 });
-			playerColour = true;
-
-			playerHealth--;
-			Play::DestroyGameObject(pid);
-			//angelState = STATE_DEAD;
-			Play::PlayAudio("die");
-			break;
-		}
-
-		// if want more bullet functions?
-
-		DrawOffset(&bullet);
-
-		if (OutOfBounds(&bullet))//||  level.isColliding(bullet.pos.x, bullet.pos.y, bullet.radius))
-		//Play::DestroyGameObject(id);
-		{
-			Play::DestroyGameObject(pid);
-		}
-	}
 
 }
 
@@ -738,6 +799,7 @@ void Explosion(Point2D pos, const char * exp)
 	int eid = Play::CreateGameObject(explosion, pos, 0, exp);
 	GameObject& explosion = Play::GetGameObject(eid);
 	explosion.animSpeed = 0.2f;
+	explosion.scale = 1.5f;
 }
 
 void UpdateExplosion()
@@ -836,6 +898,9 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	playerid = Play::CreateGameObject(angel, { 66,900 }, 33, "angel_walk_north");
 	level = Level::Level("Data\\Levels\\", "MarsBG", "Data\\Levels\\level1.xml");
 
+	GameObject& player = Play::GetGameObject(playerid);
+	player.scale = 0.85f;
+
 	//Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
 
 	//wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
@@ -904,11 +969,6 @@ bool MainGameUpdate( float elapsedTime )
 		level.display(-camera.GetXOffset(), -camera.GetYOffset(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
 		UpdateGameObjects();
 
-		// Testing for enemy generation
-		for (auto i = 0; i != gameState.enemies.size(); i++)
-		{
-			gameState.enemies[i].update();
-		}
 		DrawOffset(&player);
 		PlayGraphics::Instance().DrawRect({ 0,DISPLAY_WIDTH / 2 }, { 0,DISPLAY_HEIGHT / 2 }, { 255,0,255 }, 0);
 
