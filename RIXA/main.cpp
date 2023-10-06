@@ -170,8 +170,8 @@ public:
 			id = Play::CreateGameObject(turret, pos, 6, "turret_south");
 			GameObject& go = Play::GetGameObject(id);
 			go.animSpeed = 0.1;
-			go.scale = 2.0;
-			speed = 0;
+			go.scale = 0.2;
+			speed = 0.01;
 			attackSpeed = 11;
 			health = 8;
 			detectionRange = 666;
@@ -549,7 +549,7 @@ private:
 	int id;
 	int health = 1;
 
-	int speed = 3;
+	float speed = 3;
 	int attackSpeed = 44; // lower is faster
 	int attackCooldown = 0;
 	float attackRange = 300.0f;
@@ -671,23 +671,27 @@ void HandlePlayerControls()
 	}
 
 	// FIRE WEAPON
+	if (weaponCooldown > 0) {
+		weaponCooldown--;
+	} else {
+
 	if (Play::KeyPressed(VK_LBUTTON)) // Mouse Button
 	{
-		//Play::PlayAudio("shot");
+		//Play::PlayAudio("shot");		else {
+			int p = Play::CreateGameObject(projectile, player.pos, 1, "bullet");
+			//Play::GetGameObject(p).velocity = Vector2D( 10, 10 );
+			GameObject& nya = Play::GetGameObject(p);
+			nya.animSpeed = 0.075f;
 
-		int p = Play::CreateGameObject(projectile, player.pos, 1, "bullet");
-		//Play::GetGameObject(p).velocity = Vector2D( 10, 10 );
-		GameObject& nya = Play::GetGameObject(p);
-		nya.animSpeed = 0.075f;
+			// Find x and y of mouse relative to position
+			Point2D mousePos = Play::GetMousePos();
+			int x = (mousePos.x + camera.GetXOffset()) - player.pos.x;
+			int y = (mousePos.y + camera.GetYOffset()) - player.pos.y;
 
-		// Find x and y of mouse relative to position
-		Point2D mousePos = Play::GetMousePos();
-		int x = (mousePos.x + camera.GetXOffset()) - player.pos.x;
-		int y = (mousePos.y + camera.GetYOffset()) - player.pos.y;
-
-		int length = sqrt(x * x + y * y) / playerBulletSpeed;
-		nya.velocity = Vector2D(x / length, y / length);
-
+			int length = sqrt(x * x + y * y) / playerBulletSpeed;
+			nya.velocity = Vector2D(x / length, y / length);
+			weaponCooldown = 7;
+		}
 		//level.changeFrame();
 
 	}
@@ -802,7 +806,7 @@ void UpdateProjectiles()
 			continue;
 		}
 
-		for (auto i = 0; i != gameState.enemies.size();) {
+	for (auto i = 0; i != gameState.enemies.size();) {
 			Enemy enobj = gameState.enemies[i];
 			int eid = enobj.getID();
 			GameObject& en = Play::GetGameObject(eid);
