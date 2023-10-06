@@ -970,6 +970,9 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 			gameState.enemies.push_back(Enemy(TYPE_ENEMY2, {e.x, e.y}, {0,0}));
 		if (e.type ==3)
 			gameState.enemies.push_back(Enemy(TYPE_ENEMY3, {e.x, e.y}, {0,0}));
+		if (e.type ==4)
+			gameState.enemies.push_back(Enemy(TYPE_ENEMY4, {e.x, e.y}, {0,0}));
+
 	}
 }
 

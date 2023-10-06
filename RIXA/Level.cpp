@@ -259,6 +259,46 @@ Level::Level(string path, string tileset_s, string level) {
 				}
 			}
 		}	
+		std::cout << "dbg";
+		objectgroup = levels.find("objectgroup");
+		levels.erase(0, objectgroup + 11);
+
+
+		namep = levels.find("name");
+		levels.erase(0, namep + 6);
+		name = levels.substr(0, levels.find("\""));
+
+		std::cout << "dbg";
+
+		if (name == "enemy5") {
+			stop = false;
+			// get chunks
+			while (!stop)
+			{
+				size_t object = levels.find("object");
+				levels.erase(0, object + 6);
+				//string name = levels.substr(0, levels.find("\""));
+
+				size_t x = levels.find("x=\"") + 3;
+				levels.erase(0, x);
+				int xi = floor(stof(levels.substr(0, levels.find("\""))));
+
+				size_t y = levels.find("y=\"") + 3;
+				levels.erase(0, y);
+				int yi = floor(stof(levels.substr(0, levels.find("\""))));
+				levels.erase(0, levels.find("\""));
+
+				//collisionObjects.push_back(CollisionBox({ xi, yi }, { xi + widthi, yi + heighti }));
+				enemies.push_back(EnemyData{ xi, yi, 4 });
+
+				// disgusting
+				if (levels.find("</objectgroup>") <= 5) {
+					stop = true;
+					break;
+				}
+			}
+		}	
+
 		/// need more efficient way of breaking loop
 		stop1 = true;
 		break;
