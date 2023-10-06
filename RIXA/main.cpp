@@ -7,7 +7,7 @@
 
 int DISPLAY_WIDTH = 400;
 int DISPLAY_HEIGHT = 400;
-int DISPLAY_SCALE = 3;
+int DISPLAY_SCALE = 2;
 
 // Game states
 enum GameStateType
@@ -33,6 +33,8 @@ enum GameObjectType
 	tank,
 	roller,
 	background,
+	shadow,
+	explosion,
 };
 
 // Enemy variation types
@@ -70,11 +72,14 @@ enum Direction
 
 AngelState angelState = STATE_APPEAR;
 
+void Explosion(Point2D pos, const char * exp);
+void UpdateExplosion();
 void HandlePlayerControls();
 void UpdateCamera();
 void UpdateProjectiles();
 void UpdateGameObjects();
 
+float Distance(Point2D pos1, Point2D pos2);
 void DrawOffset(GameObject* go);
 void DrawBackground();
 bool OutOfBounds(GameObject* go);
@@ -89,12 +94,15 @@ int tlBound;
 int brBound;
 
 Level level;
+int offset = 0;
 
+// Player attributes
 int playerid;
 
 int playerHealth = 7;
 bool playerColour = false;
 int playerColourCooldown = 11;
+float range = 300.0f;
 
 void updatePlayerColour(Play::Colour c) {
 	Play::ColourSprite("angel_walk_north", c);
@@ -509,17 +517,17 @@ void HandlePlayerControls()
 	// FIRE WEAPON
 	if (Play::KeyPressed(VK_LBUTTON)) // Mouse Button
 	{
+		//Play::PlayAudio("shot");
+
 		int p = Play::CreateGameObject(projectile, player.pos, 1, "bullet");
 		//Play::GetGameObject(p).velocity = Vector2D( 10, 10 );
 		GameObject& nya = Play::GetGameObject(p);
-		nya.animSpeed = 0.1f;
+		nya.animSpeed = 0.075f;
 
 		// Find x and y of mouse relative to position
 		Point2D mousePos = Play::GetMousePos();
 		int x = floor(((mousePos.x + camera.GetXOffset()) - player.pos.x));
 		int y = floor(((mousePos.y + camera.GetYOffset()) - player.pos.y));
-		std::cout << x << std::endl;
-		std::cout << y << std::endl;
 
 		int length = sqrt(x * x + y * y) / 10;
 		nya.velocity = Vector2D(x / length, y / length);
@@ -539,7 +547,7 @@ void HandlePlayerControls()
 
 void UpdateGameObjects()
 {
-
+	
 	GameObject& player = Play::GetGameObject(playerid);
 
 	UpdateCamera();
@@ -549,10 +557,15 @@ void UpdateGameObjects()
 
 	// Update projectiles
 	UpdateProjectiles();
+	UpdateExplosion();
 
 	if (playerHealth <= 0)
 	{
-		Play::PlayAudio("die");	
+		Play::PlayAudio("synthetic_bomb");
+		Explosion(player.pos, "exp_bubble");
+		Explosion(player.pos + Point2D {20,0}, "exp_pop");
+		Explosion(player.pos + Point2D {-20, 0}, "exp_bubble");
+		Explosion(player.pos + Point2D {0, 20}, "exp_cloud");
 		state = gameLose;
 	}
 
@@ -570,10 +583,10 @@ void UpdateGameObjects()
 		PlayGraphics::Instance().DrawRect(c.getTopleft() - camera.GetOffset(), c.getBottomRight() - camera.GetOffset(), {255, 0, 0}, false);
 	}
   
-  // Update player and shadow
-    //GameObject& shadowGO = Play::GetGameObjectByType(shadow);
-	//shadowGO.pos.x = player.pos.x - 30;
-	//shadowGO.pos.y = player.pos.y + 50;
+  // Update shadow -- out for some reason?
+ //   GameObject& shadowGO = Play::GetGameObjectByType(shadow);
+	//shadowGO.pos.x = player.pos.x - 25;
+	//shadowGO.pos.y = player.pos.y + 20;
 	//DrawOffset(&shadowGO);
 
 	// for optimisation purposes
@@ -591,26 +604,56 @@ void UpdateGameObjects()
 void UpdateProjectiles()
 {
 	std::vector<int> pv = Play::CollectGameObjectIDsByType(projectile);
-	//GameObject& player = Play::GetGameObject(playerid);
+	GameObject& player = Play::GetGameObject(playerid);
 
 	// Check is player projectiles hit the enemy
 	for (int id : pv)
 	{
+		bool canDamage = true;
 		bool isDestroyed = false;
 
 		GameObject& p = Play::GetGameObject(id);
 		//std::vector<int> ev = Play::CollectGameObjectIDsByType(enemy);
 		//std::vector<Enemy> ev = gameState.enemies;
+
+		// Both ifs ensures range but allows animation to finish!!!
+		if(Distance(player.pos, p.pos) > range)
+		{
+			//Play::DestroyGameObject(id);
+			p.velocity = { 0,0 };
+			bool canDamage = false;
+		}
+
+		if(!canDamage)
+		{
+			continue;
+		}
+
+		// Destroy out of bounds bullets and animation complete bullets
+		// Allows bullets to despawn witthout running expensive enemy checking
+		if (OutOfBounds(&p) || Play::IsAnimationComplete(p)) // || level.isColliding(p.pos.x, p.pos.y, p.radius))
+		{
+			Play::DestroyGameObject(id);
+			continue;
+		}
+
 		for (auto i = 0; i != gameState.enemies.size();) {
 			Enemy enobj = gameState.enemies[i];
 			int eid = enobj.getID();
 			GameObject& en = Play::GetGameObject(eid);
+
 			if (Play::IsColliding(en, p))
 			{
 				isDestroyed = true;
+				// This is a feedback hit
+				Explosion(en.pos, "exp_pop");
 				//gameState.enemies.erase(i);
 				gameState.enemies[i].kill();
+
 				if (gameState.enemies[i].isDead()) {
+					// This is a death hit
+					Explosion(en.pos, "exp_bubble");
+					Play::PlayAudio("synthetic_bomb");
 					gameState.enemies.erase(gameState.enemies.begin() + i);
 				}
 				break;
@@ -619,8 +662,8 @@ void UpdateProjectiles()
 				i++;
 			}
 		}
-		// Destroy out of bounds bullets
-		if (OutOfBounds(&p) || isDestroyed) // || level.isColliding(p.pos.x, p.pos.y, p.radius))
+
+		if(isDestroyed)
 		{
 			Play::DestroyGameObject(id);
 			continue;
@@ -628,8 +671,6 @@ void UpdateProjectiles()
 
 		DrawOffset(&p);
 	}
-
-	GameObject& player = Play::GetGameObject(playerid);
 
 	// We can use the update projectiles to handle this
 	std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
@@ -660,6 +701,30 @@ void UpdateProjectiles()
 		}
 	}
 
+}
+
+void Explosion(Point2D pos, const char * exp)
+{
+	int eid = Play::CreateGameObject(explosion, pos, 0, exp);
+	GameObject& explosion = Play::GetGameObject(eid);
+	explosion.animSpeed = 0.2f;
+}
+
+void UpdateExplosion()
+{
+	std::vector<int> expv = Play::CollectGameObjectIDsByType(explosion);
+
+	for (int exid : expv)
+	{
+		GameObject& explosion = Play::GetGameObject(exid);
+		DrawOffset(&explosion);
+
+		if (Play::IsAnimationComplete(explosion))
+		{
+			Play::DestroyGameObject(exid);
+		}
+
+	}
 }
 
 void UpdateCamera()
@@ -693,6 +758,13 @@ void UpdateCamera()
 	}
 }
 
+float Distance(Point2D pos1, Point2D pos2)
+{
+	float x = pos2.x - pos1.x;
+	float y = pos2.y - pos1.y;
+
+	return sqrt(x*x + y*y);
+}
 
 // Draw offset presented by the camera placement
 void DrawOffset(GameObject* go)
@@ -745,13 +817,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	//approximate directional movement
 	gameState.angle = gameState.speed * 0.7;
 
-	//Play::LoadBackground("Data\\Sprites\\MarsBG2.png");
-	//does file exist, read file
-	//std::ifstream afile = std::ifstream("config.txt");
-	//std::getline(afile, message);
-	//afile.close();
-
-	//Play::CreateGameObject(shadow, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 } ,  0, "generic_shadow_one");
+	Play::CreateGameObject(shadow, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 } ,  0, "generic_shadow_one");
 
 	//gameState.enemies.push_back(Enemy(TYPE_ENEMY2, {500, 600}, {0,0}));
 	for (auto e : level.getEnemyData()) {
@@ -778,17 +844,15 @@ bool MainGameUpdate( float elapsedTime )
 	if (state == menu)
 	{
 		
-		//Play::DrawFontText("132px", "RIXA",
-		//	{ DISPLAY_WIDTH / 2, 100 }, Play::CENTRE);
-		//Play::DrawSprite("MarsBG", { 0, -4500 + DISPLAY_HEIGHT + offset}, 0);
+		Play::DrawSprite("MarsBG", { 0, -4500 + DISPLAY_HEIGHT + offset}, 0);
 		Play::DrawSprite("title", { DISPLAY_WIDTH / 2, 300 }, 0);
 
-	//	offset+=8;//+=2250/128;
+		offset+=8;//+=2250/128;
 
-	//	if(offset > 9000 - DISPLAY_HEIGHT)
-	//	{
-	//		offset = 0;
-	//	}
+		if(offset > 9000 - DISPLAY_HEIGHT)
+		{
+			offset = 0;
+		}
 
 		if((int)gameState.timer % 2 == 0)
 		{
@@ -797,16 +861,8 @@ bool MainGameUpdate( float elapsedTime )
 
 		}
 
-		//Play::DrawFontText("64px", "PRESS SPACE TO START",
-		//	{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 300 }, Play::CENTRE);
-
 		if (Play::KeyPressed(VK_SPACE))
 		{
-			//for(float i = 0; i < 50; i+=0.1)
-			//{
-			//	Play::ClearDrawingBuffer({ i,i,i });
-			//	Play::PresentDrawingBuffer();
-			//}
 			state = play;
 			//Play::StartAudioLoop("Data\\Audio\\level_one_shorter.mp3");
 		}
@@ -817,8 +873,6 @@ bool MainGameUpdate( float elapsedTime )
 		PlayGraphics::Instance().DrawRect({ 0,DISPLAY_WIDTH }, { 0,DISPLAY_HEIGHT },{255,0,255}, 1);
 		level.display(-camera.GetXOffset(), -camera.GetYOffset(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
 		UpdateGameObjects();
-		// DVD
-		//"Any similarity with fictitious events or characters was purely coincidental."
 
 		// Testing for enemy generation
 		for (auto i = 0; i != gameState.enemies.size(); i++)
@@ -831,11 +885,16 @@ bool MainGameUpdate( float elapsedTime )
 	}
 	else if (state == gameLose) {
 
+		//PlayGraphics::Instance().DrawRect({ 0,DISPLAY_WIDTH }, { 0,DISPLAY_HEIGHT }, { 255,0,255 }, 1);
+		//level.display(-camera.GetXOffset(), -camera.GetYOffset(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
+		UpdateExplosion();
+
 		Play::DrawFontText("64px", "YOU HAVE FAILED D:",
 			{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 300 }, Play::CENTRE);
 
 		Play::DrawFontText("64px", "PRESS SPACE TO TRY AGAIN",
 			{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 100 }, Play::CENTRE);
+
 
 		if (Play::KeyPressed(VK_SPACE))
 		{
@@ -853,11 +912,6 @@ bool MainGameUpdate( float elapsedTime )
 // Gets called once when the player quits the game 
 int MainGameExit( void )
 {
-	//write to the config file
-	//std::ofstream afile = std::ofstream("config.txt");
-	//afile << "Hello World";
-	//afile.close();
-
 	Play::DestroyManager();
 	return PLAY_OK;
 }
