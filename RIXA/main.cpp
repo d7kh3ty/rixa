@@ -153,13 +153,13 @@ public:
 		else if(ENEMY_TYPE == TYPE_ENEMY3)
 		{
 			type = TYPE_ENEMY3;
-			id = Play::CreateGameObject(roller, pos, 10, "tracked_south");
+			id = Play::CreateGameObject(roller, pos, 50, "tracked_south");
 			GameObject& go = Play::GetGameObject(id);
 			go.animSpeed = 0.1;
 			go.scale = 2.0;
 			speed = 5;
 			attackSpeed = 11;
-			health = 8;
+			health = 4;
 			detectionRange = 666;
 			attackRange = 250.0f;
 			animSpeed = 0.08f;
@@ -167,7 +167,7 @@ public:
 		else if (ENEMY_TYPE == TYPE_ENEMY4)
 		{
 			type = TYPE_ENEMY4;
-			id = Play::CreateGameObject(turret, pos, 6, "turret_south");
+			id = Play::CreateGameObject(turret, pos, 15, "turret_south");
 			GameObject& go = Play::GetGameObject(id);
 			go.animSpeed = 0.1;
 			go.scale = 0.5;

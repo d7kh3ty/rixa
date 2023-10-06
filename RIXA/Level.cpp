@@ -331,7 +331,6 @@ int Level::getWidth() {
 int Level::getHeight() {
 	return height;
 }
-
 void Level::addCollisionObject(CollisionBox box) {
 	collisionObjects.push_back(box);
 }
