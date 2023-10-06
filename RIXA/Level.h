@@ -22,10 +22,11 @@ class Level {
 public:
 	Level();
 	Level(string path, string tileset_s, string level);
-	void display(float x, float y);
+	void display(float x, float y, int dwidth, int dheight);
 	int getWidth();
 	int getHeight();
 	void addCollisionObject(CollisionBox box);
+	bool isColliding(int x, int y, int r);
 	vector<CollisionBox> getCollisionObjects();
 	vector<EnemyData> getEnemyData();
 

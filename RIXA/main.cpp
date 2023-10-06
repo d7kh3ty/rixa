@@ -5,9 +5,9 @@
 #include "Level.h"
 #include <cmath>
 
-int DISPLAY_WIDTH = 800;
-int DISPLAY_HEIGHT = 800;
-int DISPLAY_SCALE = 1;
+int DISPLAY_WIDTH = 400;
+int DISPLAY_HEIGHT = 400;
+int DISPLAY_SCALE = 3;
 
 // Game states
 enum GameStateType
@@ -29,7 +29,9 @@ enum GameObjectType
 	angel,
 	projectile,
 	e_projectile,
-	enemy,
+	drone,
+	tank,
+	roller,
 	background,
 };
 
@@ -77,7 +79,7 @@ void DrawOffset(GameObject* go);
 void DrawBackground();
 bool OutOfBounds(GameObject* go);
 
-Camera camera(0,0,DISPLAY_WIDTH, DISPLAY_HEIGHT);
+Camera camera(0,600,DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
 float wBound;
 float hBound;
@@ -90,6 +92,20 @@ Level level;
 
 int playerid;
 
+int playerHealth = 7;
+bool playerColour = false;
+int playerColourCooldown = 11;
+
+void updatePlayerColour(Play::Colour c) {
+	Play::ColourSprite("angel_walk_north", c);
+	Play::ColourSprite("angel_walk_northeast", c);
+	Play::ColourSprite("angel_walk_northwest", c);
+	Play::ColourSprite("angel_walk_west", c);
+	Play::ColourSprite("angel_walk_south", c);
+	Play::ColourSprite("angel_walk_southwest", c);
+	Play::ColourSprite("angel_walk_southeast", c);
+	Play::ColourSprite("angel_walk_east", c);}
+
 // DVD ENEMY CLASS
 class Enemy {
 public:
@@ -100,15 +116,16 @@ public:
 		if (ENEMY_TYPE == TYPE_ENEMY1)
 		{
 			type = TYPE_ENEMY1;
-			id = Play::CreateGameObject(enemy, pos, 10, "cute_south");
-			Play::SetSprite(Play::GetGameObject(id), "cute_south", 0.1f);
+			id = Play::CreateGameObject(drone, pos, 15, "cute_south");
+			//Play::SetSprite(Play::GetGameObject(id), "cute_south", 0.1f);
+			Play::GetGameObject(id).animSpeed = 0.1;
+		}
+		else if(ENEMY_TYPE == TYPE_ENEMY2)
+		{
+			type = TYPE_ENEMY2;
+			id = Play::CreateGameObject(tank, pos, 10, "tank_south");
 			//Play::GetGameObject(id).animSpeed = 1;
 		}
-		//else if(ENEMY_TYPE == TYPE_TANK)
-		//{
-		//	//id = Play::CreateGameObject(enemy, pos, 10, "tank_south");
-		//	Play::GetGameObject(id).animSpeed = 1;
-		//}
 		else
 		{
 			// If enemy type does not match
@@ -126,8 +143,24 @@ public:
 	// update everything 
 	void update() {
 
-		GameObject& player = Play::GetGameObject(playerid);
+
 		GameObject& enemy = Play::GetGameObject(id);
+		enemy.pos.x = floor(enemy.pos.x);
+		enemy.pos.y = floor(enemy.pos.y);
+		DrawOffset(&enemy);
+		if (dead) {
+			enemy.velocity = { 0, 0 };
+			Play::SetSprite(Play::GetGameObject(id), "cute_northeast", 0.1f);
+			Play::ColourSprite("cute_northeast", {255,0,0});
+			countdown--;
+			if (countdown == 0) {
+				Play::DestroyGameObject(id);
+				Play::ColourSprite("cute_northeast", {100,100,100});
+				//delete this;
+			}
+			return;
+		}
+		GameObject& player = Play::GetGameObject(playerid);
 
 		float x = (player.pos.x) - enemy.pos.x;
 		float y = (player.pos.y) - enemy.pos.y;
@@ -146,18 +179,18 @@ public:
 
 			// Shoot in direction of player based on attack cooldown
 			if (attackCooldown == 0) { //Play::RandomRoll(120) == 1){
-				int pid = Play::CreateGameObject(e_projectile, { enemy.pos.x, enemy.pos.y }, 90, "bullet");
+				int pid = Play::CreateGameObject(e_projectile, { enemy.pos.x, enemy.pos.y }, 1, "bullet");
 				GameObject& bullet = Play::GetGameObject(pid);
 				//Play::PlayAudio("tool");
 				float speed_check = length / bulletSpeed;
 				bullet.velocity = Vector2D(x / speed_check, y / speed_check);
 				attackCooldown = attackSpeed;
 
-				float velx = Play::RandomRollRange(-10, 10);
-				float vely = Play::RandomRollRange(-10, 10);
-				float magnitude = sqrt(x * x + y * y);
+				float velx = x + Play::RandomRollRange(-300, 300);
+				float vely = y + Play::RandomRollRange(-300, 300);
+				float magnitude = sqrt(velx * velx + vely * vely) / speed;
 
-				enemy.velocity = { (velx * speed * 10) / magnitude, (vely * speed * 10) / magnitude };
+				enemy.velocity = { ((velx) / magnitude) , ((vely) / magnitude) };
 			} else {
 				attackCooldown--;
 			}
@@ -166,7 +199,7 @@ public:
 			// Choose a random direction
 
 
-			//// Move in direction of player to left or right
+			//// Move in direction of player to left or right* 10)
 			//if (leftright) {
 			//	x = floor(((player.pos.x) - enemy.pos.x - 333));
 			//}
@@ -185,7 +218,6 @@ public:
 			//}
 
 			if (x != 0) {
-				float m = y / x;
 				// facing right
 				if (x > 0) {
 					// facing down
@@ -196,9 +228,13 @@ public:
 					else {
 						dir = DIRECTION_NORTH_EAST;
 					}
-				}
-				// facing left
-				else {
+					// facing approximately straight right
+					if (y < 20 && y > -20) {
+						dir = DIRECTION_EAST;
+					}
+
+				} // facing left
+				else if (x < 0) {
 					// facing down
 					if (y > 0) {
 						dir = DIRECTION_SOUTH_WEST;
@@ -206,10 +242,24 @@ public:
 					// facing up
 					else {
 						dir = DIRECTION_NORTH_WEST;
+					}	
+					// facing approximately straight left
+					if (y < 20 && y > -20) {
+						dir = DIRECTION_WEST;
 					}
+				}	
+				// facing approximately straight down
+				if (x < 20 && x > -20 && y > 0) {
+					dir = DIRECTION_SOUTH;
 				}
-			}
-			else {
+				// facing approximately straight up
+				else if (x < 20 && x > -20 && y < 0) {
+					dir = DIRECTION_NORTH;
+				}
+
+
+
+			} else {
 				dir = DIRECTION_SOUTH;	
 			}
 
@@ -254,94 +304,84 @@ public:
 		case TYPE_ENEMY2:
 			switch (dir) {
 			case IDLE:
-				Play::SetSprite(enemy, "cute_south", 0.0f);
+				Play::SetSprite(enemy, "tank_south", 0.0f);
 				break;
 			case DIRECTION_NORTH:
-				Play::SetSprite(enemy, "cute_north", 0.07f);
+				Play::SetSprite(enemy, "tank_north", 0.07f);
 				break;
 			case DIRECTION_NORTH_EAST:
-				Play::SetSprite(enemy, "cute_northeast", 0.07f);
+				Play::SetSprite(enemy, "tank_northeast", 0.07f);
 				break;
 			case DIRECTION_EAST:
-				Play::SetSprite(enemy, "cute_east", 0.07f);
+				Play::SetSprite(enemy, "tank_east", 0.07f);
 				break;
 			case DIRECTION_SOUTH_EAST:
-				Play::SetSprite(enemy, "cute_southeast", 0.07f);
+				Play::SetSprite(enemy, "tank_southeast", 0.07f);
 				break;
 			case DIRECTION_SOUTH:
-				Play::SetSprite(enemy, "cute_south", 0.07f);
+				Play::SetSprite(enemy, "tank_south", 0.07f);
 				break;
 			case DIRECTION_SOUTH_WEST:
-				Play::SetSprite(enemy, "cute_southwest", 0.07f);
+				Play::SetSprite(enemy, "tank_southwest", 0.07f);
 				break;
 			case DIRECTION_WEST:
-				Play::SetSprite(enemy, "cute_west", 0.07f);
+				Play::SetSprite(enemy, "tank_west", 0.07f);
 				break;
 			case DIRECTION_NORTH_WEST:
-				Play::SetSprite(enemy, "cute_northwest", 0.07f);
+				Play::SetSprite(enemy, "tank_northwest", 0.07f);
 				break;
 			}
 			break;
 		case TYPE_ENEMY3:
 			switch (dir) {
 			case IDLE:
-				Play::SetSprite(enemy, "cute_south", 0.0f);
+				Play::SetSprite(enemy, "tank_south", 0.0f);
 				break;
 			case DIRECTION_NORTH:
-				Play::SetSprite(enemy, "cute_north", 0.07f);
+				Play::SetSprite(enemy, "tank_north", 0.07f);
 				break;
 			case DIRECTION_NORTH_EAST:
-				Play::SetSprite(enemy, "cute_northeast", 0.07f);
+				Play::SetSprite(enemy, "tank_northeast", 0.07f);
 				break;
 			case DIRECTION_EAST:
-				Play::SetSprite(enemy, "cute_east", 0.07f);
+				Play::SetSprite(enemy, "tank_east", 0.07f);
 				break;
 			case DIRECTION_SOUTH_EAST:
-				Play::SetSprite(enemy, "cute_southeast", 0.07f);
+				Play::SetSprite(enemy, "tanke_southeast", 0.07f);
 				break;
 			case DIRECTION_SOUTH:
-				Play::SetSprite(enemy, "cute_south", 0.07f);
+				Play::SetSprite(enemy, "tank_south", 0.07f);
 				break;
 			case DIRECTION_SOUTH_WEST:
-				Play::SetSprite(enemy, "cute_southwest", 0.07f);
+				Play::SetSprite(enemy, "tank_southwest", 0.07f);
 				break;
 			case DIRECTION_WEST:
-				Play::SetSprite(enemy, "cute_west", 0.07f);
+				Play::SetSprite(enemy, "tank_west", 0.07f);
 				break;
 			case DIRECTION_NORTH_WEST:
-				Play::SetSprite(enemy, "cute_northwest", 0.07f);
+				Play::SetSprite(enemy, "tank_northwest", 0.07f);
 				break;
 			}
 			break;
 		}
 
 
-		DrawOffset(&enemy);
-
 		// Destroy out of bounds game objects
 		if (OutOfBounds(&enemy)) {
 			Play::DestroyGameObject(id);
 		}
+	}
 
-		// We can use the update projectiles to handle this
-		std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
+	int getID() {
+		return id;
+	}
 
-		// Detect player collision
-		for (int pid : projectiles) {
-			GameObject& bullet = Play::GetGameObject(pid);
-			if (Play::IsColliding(bullet, player) && angelState != STATE_DEAD) {
-				angelState = STATE_DEAD;
-				//Play::PlayAudio("die");
-			}
-
-			// if want more bullet functions?
-
-			DrawOffset(&bullet);
-
-			if (OutOfBounds(&bullet))
-			{
-				Play::DestroyGameObject(pid);
-			}
+	void kill() {
+		dead = true;
+	}
+	bool isDead() {
+		if (countdown <= 0) {
+			return true;
 		}
 	}
 
@@ -350,15 +390,18 @@ private:
 	int id;
 	//int health;
 
-	int speed = 6;
-	int attackSpeed = 77; // lower is faster
+	int speed = 3;
+	int attackSpeed = 44; // lower is faster
 	int attackCooldown = 0;
 
-	int bulletSpeed = 5;
-	int detectionRange = 444;
+	float bulletSpeed = 3;
+	int detectionRange = 222;
 	bool playerDetected = false;
 
 	bool leftright = 0; // this is for random flanking
+
+	int countdown = 13;
+	bool dead = false;
 
 	Direction dir = DIRECTION_SOUTH;
 };
@@ -466,7 +509,7 @@ void HandlePlayerControls()
 	// FIRE WEAPON
 	if (Play::KeyPressed(VK_LBUTTON)) // Mouse Button
 	{
-		int p = Play::CreateGameObject(projectile, player.pos, 30, "bullet");
+		int p = Play::CreateGameObject(projectile, player.pos, 1, "bullet");
 		//Play::GetGameObject(p).velocity = Vector2D( 10, 10 );
 		GameObject& nya = Play::GetGameObject(p);
 		nya.animSpeed = 0.1f;
@@ -484,8 +527,9 @@ void HandlePlayerControls()
 	}
 
 	// Collisions in the environment checking
+	/// replace with level.isColliding()
 	for (auto c : level.getCollisionObjects()) {
-		if (c.checkColliding(player.pos.x, player.pos.y, 64)) {
+		if (c.checkColliding(player.pos.x, player.pos.y, player.radius)) {
 			player.pos = player.oldPos;
 			//player.velocity = player.;
 		}
@@ -496,6 +540,8 @@ void HandlePlayerControls()
 void UpdateGameObjects()
 {
 
+	GameObject& player = Play::GetGameObject(playerid);
+
 	UpdateCamera();
 
 	// BACKGROUND MUST BE UPDATED FIRST
@@ -503,6 +549,21 @@ void UpdateGameObjects()
 
 	// Update projectiles
 	UpdateProjectiles();
+
+	if (playerHealth <= 0)
+	{
+		Play::PlayAudio("die");	
+		state = gameLose;
+	}
+
+	if (playerColour) {
+		playerColourCooldown--;
+	}
+	if (playerColourCooldown <= 0) {
+		playerColour = false;
+		playerColourCooldown = 11;
+		updatePlayerColour({ 100, 100, 100 });
+	}
 
   	// for debug
 	for (auto c : level.getCollisionObjects()) {
@@ -514,6 +575,16 @@ void UpdateGameObjects()
 	//shadowGO.pos.x = player.pos.x - 30;
 	//shadowGO.pos.y = player.pos.y + 50;
 	//DrawOffset(&shadowGO);
+
+	// for optimisation purposes
+	///for (int i = 0; i != gameState.enemies.size();) {
+	///	if (gameState.enemies[i].isDead()) {
+	///		gameState.enemies.erase(gameState.enemies.begin() + i-1);
+	///	}
+	///	else {
+	///		i++;
+	///	}
+	///}
 
 }
 
@@ -528,28 +599,65 @@ void UpdateProjectiles()
 		bool isDestroyed = false;
 
 		GameObject& p = Play::GetGameObject(id);
-		std::vector<int> ev = Play::CollectGameObjectIDsByType(enemy);
-
-		for(int e : ev)
-		{
-			GameObject& enemy = Play::GetGameObject(e);
-			if (Play::IsColliding(enemy, p))
+		//std::vector<int> ev = Play::CollectGameObjectIDsByType(enemy);
+		//std::vector<Enemy> ev = gameState.enemies;
+		for (auto i = 0; i != gameState.enemies.size();) {
+			Enemy enobj = gameState.enemies[i];
+			int eid = enobj.getID();
+			GameObject& en = Play::GetGameObject(eid);
+			if (Play::IsColliding(en, p))
 			{
-				Play::DestroyGameObject(e);
 				isDestroyed = true;
+				//gameState.enemies.erase(i);
+				gameState.enemies[i].kill();
+				if (gameState.enemies[i].isDead()) {
+					gameState.enemies.erase(gameState.enemies.begin() + i);
+				}
 				break;
 			}
-
+			else {
+				i++;
+			}
 		}
-
 		// Destroy out of bounds bullets
-		if (OutOfBounds(&p) || isDestroyed)
+		if (OutOfBounds(&p) || isDestroyed) // || level.isColliding(p.pos.x, p.pos.y, p.radius))
 		{
 			Play::DestroyGameObject(id);
 			continue;
 		}
 
 		DrawOffset(&p);
+	}
+
+	GameObject& player = Play::GetGameObject(playerid);
+
+	// We can use the update projectiles to handle this
+	std::vector<int> projectiles = Play::CollectGameObjectIDsByType(e_projectile);
+
+	// iterate bullets
+	for (int pid : projectiles) {
+		GameObject& bullet = Play::GetGameObject(pid);
+		// Detect player collision
+		if (Play::IsColliding(bullet, player)) {
+			updatePlayerColour({ 255, 0, 0 });
+			playerColour = true;
+
+			playerHealth--;
+			Play::DestroyGameObject(pid);
+			//angelState = STATE_DEAD;
+			Play::PlayAudio("die");
+			break;
+		}
+
+		// if want more bullet functions?
+
+		DrawOffset(&bullet);
+
+		if (OutOfBounds(&bullet))//||  level.isColliding(bullet.pos.x, bullet.pos.y, bullet.radius))
+		//Play::DestroyGameObject(id);
+		{
+			Play::DestroyGameObject(pid);
+		}
 	}
 
 }
@@ -567,18 +675,18 @@ void UpdateCamera()
 	{
 		camera.Follow(DISPLAY_WIDTH/2, player.pos.y);
 	}
-	else if (player.pos.y - DISPLAY_HEIGHT/2  < -hBound) // Top of the level bound
-	{
-		camera.Follow(player.pos.x, -hBound + DISPLAY_HEIGHT / 2 );
-	}
-	else if (player.pos.x - DISPLAY_WIDTH / 2 < 0 && player.pos.y - DISPLAY_HEIGHT / 2 < -hBound) // Both height and width bounds reached
-	{
-		camera.Follow(DISPLAY_WIDTH/2, -hBound + DISPLAY_HEIGHT / 2 );
-	}
-	else if (player.pos.x + (DISPLAY_WIDTH / 2) > wBound && player.pos.y - DISPLAY_HEIGHT / 2  < -hBound)
-	{
-		camera.Follow(wBound, -hBound + DISPLAY_HEIGHT / 2 );
-	}
+	//else if (player.pos.y - DISPLAY_HEIGHT/2  < -hBound) // Top of the level bound
+	//{
+	//	camera.Follow(player.pos.x, -hBound + DISPLAY_HEIGHT / 2 );
+	//}
+	//else if (player.pos.x - DISPLAY_WIDTH / 2 < 0 && player.pos.y - DISPLAY_HEIGHT / 2 < -hBound) // Both height and width bounds reached
+	//{
+	//	camera.Follow(DISPLAY_WIDTH/2, -hBound + DISPLAY_HEIGHT / 2 );
+	//}
+	//else if (player.pos.x + (DISPLAY_WIDTH / 2) > wBound && player.pos.y - DISPLAY_HEIGHT / 2  < -hBound)
+	//{
+	//	camera.Follow(wBound, -hBound + DISPLAY_HEIGHT / 2 );
+	//}
 	else // Otherwise
 	{
 		camera.Follow(player.pos.x, player.pos.y);
@@ -623,7 +731,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 
 	// Set default game objects
 	//Play::CreateGameObject(angel, { DISPLAY_WIDTH/2+600,DISPLAY_HEIGHT/2+200 }, 100, "angel");
-	playerid = Play::CreateGameObject(angel, { 800,600 }, 100, "angel");
+	playerid = Play::CreateGameObject(angel, { 66,900 }, 33, "angel_walk_north");
 	level = Level::Level("Data\\Levels\\", "MarsBG", "Data\\Levels\\level1.xml");
 
 	//Play::CreateGameObject(background, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 }, 100, "MarsBG");
@@ -631,7 +739,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 	//wBound = 3 / 2 * Play::GetSpriteWidth("MarsBG");
 	//hBound = 7 / 4 * Play::GetSpriteHeight("MarsBG");
 
-	wBound = 30 * 32;//level.getWidth();
+	wBound = 32 * 32;//level.getWidth();
 	hBound = 128 * 32 -100;//level.getHeight();
 
 	//approximate directional movement
@@ -645,7 +753,7 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 
 	//Play::CreateGameObject(shadow, { DISPLAY_WIDTH / 2,DISPLAY_HEIGHT / 2 } ,  0, "generic_shadow_one");
 
-	gameState.enemies.push_back(Enemy(TYPE_ENEMY1, {500, 600}, {0,0}));
+	//gameState.enemies.push_back(Enemy(TYPE_ENEMY2, {500, 600}, {0,0}));
 	for (auto e : level.getEnemyData()) {
 		if (e.type == 1)
 			gameState.enemies.push_back(Enemy(TYPE_ENEMY1, {e.x, e.y}, {0,0}));
@@ -669,6 +777,7 @@ bool MainGameUpdate( float elapsedTime )
 	// Placeholders of menu and such
 	if (state == menu)
 	{
+		
 		//Play::DrawFontText("132px", "RIXA",
 		//	{ DISPLAY_WIDTH / 2, 100 }, Play::CENTRE);
 		//Play::DrawSprite("MarsBG", { 0, -4500 + DISPLAY_HEIGHT + offset}, 0);
@@ -699,14 +808,14 @@ bool MainGameUpdate( float elapsedTime )
 			//	Play::PresentDrawingBuffer();
 			//}
 			state = play;
-			Play::StartAudioLoop("Data\\Audio\\level_one_shorter.mp3");
+			//Play::StartAudioLoop("Data\\Audio\\level_one_shorter.mp3");
 		}
 	}
 	else if (state == play)
 	{
 		HandlePlayerControls();
 		PlayGraphics::Instance().DrawRect({ 0,DISPLAY_WIDTH }, { 0,DISPLAY_HEIGHT },{255,0,255}, 1);
-		level.display(-camera.GetXOffset(), -camera.GetYOffset());
+		level.display(-camera.GetXOffset(), -camera.GetYOffset(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
 		UpdateGameObjects();
 		// DVD
 		//"Any similarity with fictitious events or characters was purely coincidental."
@@ -718,6 +827,21 @@ bool MainGameUpdate( float elapsedTime )
 		}
 		DrawOffset(&player);
 		PlayGraphics::Instance().DrawRect({ 0,DISPLAY_WIDTH / 2 }, { 0,DISPLAY_HEIGHT / 2 }, { 255,0,255 }, 0);
+
+	}
+	else if (state == gameLose) {
+
+		Play::DrawFontText("64px", "YOU HAVE FAILED D:",
+			{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 300 }, Play::CENTRE);
+
+		Play::DrawFontText("64px", "PRESS SPACE TO TRY AGAIN",
+			{ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 100 }, Play::CENTRE);
+
+		if (Play::KeyPressed(VK_SPACE))
+		{
+			state = play;
+			MainGameEntry(0, 0);
+		}
 
 	}
 
