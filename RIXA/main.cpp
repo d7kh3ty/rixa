@@ -126,13 +126,17 @@ public:
 			type = TYPE_ENEMY1;
 			id = Play::CreateGameObject(drone, pos, 15, "cute_south");
 			//Play::SetSprite(Play::GetGameObject(id), "cute_south", 0.1f);
-			Play::GetGameObject(id).animSpeed = 0.1;
+			GameObject& go = Play::GetGameObject(id);
+			go.animSpeed = 0.1;
+			go.scale = 0.5;
 		}
 		else if(ENEMY_TYPE == TYPE_ENEMY2)
 		{
 			type = TYPE_ENEMY2;
 			id = Play::CreateGameObject(tank, pos, 10, "tank_south");
-			//Play::GetGameObject(id).animSpeed = 1;
+			GameObject& go = Play::GetGameObject(id);
+			go.animSpeed = 0.1;
+			go.scale = 2.0;
 		}
 		else
 		{
@@ -773,7 +777,7 @@ void DrawOffset(GameObject* go)
 	float oldPosy = go->pos.y;
 	go->pos = { oldPosx - camera.GetXOffset(),oldPosy - camera.GetYOffset() };
 	Play::UpdateGameObject(*go);
-	Play::DrawObject(*go);
+	Play::DrawObjectRotated(*go);
 	go->pos = { oldPosx,oldPosy };
 	Play::UpdateGameObject(*go);
 
