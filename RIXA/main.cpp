@@ -170,7 +170,7 @@ public:
 			id = Play::CreateGameObject(turret, pos, 6, "turret_south");
 			GameObject& go = Play::GetGameObject(id);
 			go.animSpeed = 0.1;
-			go.scale = 1.0;
+			go.scale = 0.5;
 			speed = 0.0;
 			attackSpeed = 11;
 			health = 8;
