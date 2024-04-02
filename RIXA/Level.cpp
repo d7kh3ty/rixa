@@ -13,7 +13,7 @@ using std::stringstream;
 
 Level::Level() {}
 
-// load in the level
+// This is a script for loading in a level via xml
 Level::Level(string path, string tileset_s, string level) {
 	tileset = PlayGraphics::Instance().LoadSpriteSheet(path, tileset_s, 18, 135);
 	

@@ -1,41 +1,77 @@
 #include "Camera.h"
+#include "Helper.h"
+#include "Player.h"
 
-Camera::Camera(float xOffset, float yOffset, int width, int height)
+#include <cmath>
+
+Camera::Camera(float xOffset, float yOffset, int width, int height) :
+	XOffset(xOffset),
+	YOffset(yOffset),
+	DISPLAY_WIDTH(width),
+	DISPLAY_HEIGHT(height),
+	LerpAlpha(0.05f)
 {
-	xOffset_ = xOffset;
-	yOffset_ = yOffset;
-	height_ = height;
-	width_ = width;
+}
+
+// Draw object with respect to camera offsetes
+void Camera::DrawOffset(GameObject* gameObject)
+{
+	// Get positions
+	float oldPosx = gameObject->pos.x;
+	float oldPosy = gameObject->pos.y;
+
+	// Translate according to offset and draw
+	gameObject->pos = { oldPosx - GetXOffset(),oldPosy - GetYOffset() };
+	Play::UpdateGameObject(*gameObject);
+	Play::DrawObjectRotated(*gameObject);
+
+	// Then set it back
+	gameObject->pos = { oldPosx,oldPosy };
+	Play::UpdateGameObject(*gameObject);
+}
+
+void Camera::Update(float deltaTime)
+{
+	GameObject& playerGameObject = Play::GetPlayer()->GetGameObject();
+
+	// Camera bounding for level
+	if (playerGameObject.pos.x + (DISPLAY_WIDTH / 2) > Helper::WidthBound) // R Bound
+	{
+		Follow(deltaTime, Helper::WidthBound - DISPLAY_WIDTH / 2, playerGameObject.pos.y);
+	}
+	else if (playerGameObject.pos.x - DISPLAY_WIDTH / 2 < 0) // L Bound
+	{
+		Follow(deltaTime, DISPLAY_WIDTH / 2, playerGameObject.pos.y);
+	}
+	else // Otherwise
+	{
+		Follow(deltaTime, playerGameObject.pos.x, playerGameObject.pos.y);
+	}
+
 }
 
 float Camera::GetXOffset()
 {
-	return xOffset_;
+	return XOffset;
 }
 
 float Camera::GetYOffset()
 {
-	return yOffset_;
+	return YOffset;
 }
 
-void Camera::Move(float x, float y)
+void Camera::Follow(float deltaTime, float x, float y)
 {
-	xOffset_ += x;
-	yOffset_ += y;
-}
+	// Centre x offset
+	XOffset = std::lerp(XOffset, x - (DISPLAY_WIDTH / 2), LerpAlpha);// * deltaTime);
 
-void Camera::Follow(float x, float y)
-{
-	xOffset_ = x - width_ / 2;
-
-	if(y - height_ / 2 < yOffset_)
+	// Bounds the camera from the bottom
+	if (y - (DISPLAY_HEIGHT / 2) < YOffset)
 	{
-		yOffset_ = y - height_ / 2;
+		YOffset = std::lerp(YOffset, y - (DISPLAY_HEIGHT / 2), LerpAlpha);// *deltaTime);
 	}
-	//std::cout << "xOff: " << xOffset_ << "\n";
-	//std::cout << "yOff: " << yOffset_ << "\n";
 }
 
 Point2f Camera::GetOffset() {
-	return Point2f(xOffset_, yOffset_);
+	return Point2f(XOffset, YOffset);
 }

@@ -41,6 +41,9 @@
 #include <filesystem>
 #include <thread>
 #include <future>
+//#include "Actor.h"
+//#include "Player.h"
+//#include "Camera.h"
 
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used content from the Windows headers
 #define NOMINMAX // Stop windows macros defining their own min and max macros
@@ -57,6 +60,16 @@
 #include <Shlobj.h>
 #pragma warning(push)
 #pragma warning(disable:4458) // Suppress warning for declaration of 'xyz' hides class member
+
+// Get
+class Player;
+class Camera;
+class Level;
+
+// GameObject
+class Projectile;
+class Character;
+class Enemy;
 
  // Redirect the GDI to use the standard library for min and max
 namespace Gdiplus
@@ -1504,6 +1517,10 @@ struct GameObject
 	int lastFrameUpdated{ -1 };
 
 	// Add your own data members here if you want to
+	Projectile* owningProjectile;
+	Character* owningCharacter;
+	Enemy* owningEnemy;
+
 	PLAY_ADD_GAMEOBJECT_MEMBERS
 
 	int GetId() { return m_id; }
@@ -1692,6 +1709,15 @@ namespace Play
 	//**************************************************************************************************
 
 #ifdef PLAY_USING_GAMEOBJECT_MANAGER
+
+	void SetPlayer(Player* player);
+	Player* GetPlayer();
+
+	void SetCamera(Camera* camera);
+	Camera* GetCamera();
+
+	void SetLevel(Level* level);
+	Level* GetLevel();
 
 	// Creates a new GameObject and adds it to the managed list.
 	// > Returns the new object's unique id
@@ -4004,10 +4030,20 @@ GameObject::GameObject( int type, Point2f newPos, int collisionRadius, int sprit
 // The PlayManager is namespace rather than a class
 namespace Play
 {
+
 #ifdef PLAY_USING_GAMEOBJECT_MANAGER
 
 	// A map is used internally to store all the GameObjects and their unique ids
 	static std::map<int, GameObject&> objectMap;
+
+	// Player
+	Player* PlayerPtr;
+
+	// Camera
+	Camera* CameraPtr;
+
+	// Level
+	Level* LevelPtr;
 
 	// Used instead of Null return values, PlayMangager operations performed on this GameObject should fail transparently
 	static GameObject noObject{ -1,{ 0, 0 }, 0, -1 };
@@ -4502,6 +4538,36 @@ namespace Play
 
 #ifdef PLAY_USING_GAMEOBJECT_MANAGER
 
+	void SetPlayer(Player* player)
+	{
+		PlayerPtr = player;
+	}
+
+	Player* GetPlayer()
+	{
+		return PlayerPtr;
+	}
+
+	void SetCamera(Camera* camera)
+	{
+		CameraPtr = camera;
+	}
+
+	Camera* GetCamera()
+	{
+		return CameraPtr;
+	}
+
+	void SetLevel(Level* level)
+	{
+		LevelPtr = level;
+	}
+
+	Level* GetLevel()
+	{
+		return LevelPtr;
+	}
+
 	int CreateGameObject( int type, Point2f newPos, int collisionRadius, const char* spriteName )
 	{
 		int spriteId = PlayGraphics::Instance().GetSpriteId( spriteName );
@@ -4615,6 +4681,7 @@ namespace Play
 		else
 		{
 			GameObject* go = &objectMap.find( ID )->second;
+
 			delete go;
 			objectMap.erase( ID );
 		}
