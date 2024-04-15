@@ -71,6 +71,16 @@ class Projectile;
 class Character;
 class Enemy;
 
+enum class GameState
+{
+	init,
+	menu,
+	play,
+	gameWin,
+	gameLose,
+	RESTART
+};
+
  // Redirect the GDI to use the standard library for min and max
 namespace Gdiplus
 {
@@ -1718,6 +1728,9 @@ namespace Play
 
 	void SetLevel(Level* level);
 	Level* GetLevel();
+
+	void SetGameState(GameState state);
+	GameState GetGameState();
 
 	// Creates a new GameObject and adds it to the managed list.
 	// > Returns the new object's unique id
@@ -4045,6 +4058,9 @@ namespace Play
 	// Level
 	Level* LevelPtr;
 
+	// GameState
+	GameState GameStatePtr;
+
 	// Used instead of Null return values, PlayMangager operations performed on this GameObject should fail transparently
 	static GameObject noObject{ -1,{ 0, 0 }, 0, -1 };
 
@@ -4566,6 +4582,16 @@ namespace Play
 	Level* GetLevel()
 	{
 		return LevelPtr;
+	}
+
+	void SetGameState(GameState state)
+	{
+		GameStatePtr = state;
+	}
+
+	GameState GetGameState()
+	{
+		return GameStatePtr;
 	}
 
 	int CreateGameObject( int type, Point2f newPos, int collisionRadius, const char* spriteName )
